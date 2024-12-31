@@ -36,7 +36,7 @@
 * **`FloatermReplSendClear`**: 发送清屏命令到 REPL，清除 REPL 终端的显示。
 * **`FloatermReplSendExit`**: 发送退出命令到 REPL，关闭 REPL 进程。
 * **`FloatermReplSendWord`**: 发送光标下的单词到 REPL。
-* **`FloatermReplMark [range]`**: 标记一个代码块或可视选择，方便后续发送。
+* **`FloatermReplMark [range]`**: visual标记一个代码块或可视选择，方便后续发送。
 * **`FloatermReplSendMark`**: 发送之前使用 `FloatermReplMark` 命令标记的代码。
 * **`FloatermReplQuickuiMark`**: （可能依赖 `vim-quickui` 插件）快速查看标记的代码。
 
@@ -49,4 +49,35 @@
 * **`g:floaterm_repl_clear`**: 一个字典，用于配置不同文件类型的 REPL 清屏命令。
 * **`g:floaterm_repl_exit`**: 一个字典，用于配置不同文件类型的 REPL 退出命令。
 
-**注意:** 使用此插件需要先安装 [vim-floaterm](https://github.com/voldikss/vim-floaterm)插件。
+# 典型keymap
+> 使用`<M-e>`作为操作的前缀
+```
+" start
+nnoremap <silent><M-e>r :FloatermReplStart!<Cr>
+nnoremap <silent><M-e><Cr> :FloatermReplSendNewlineOrStart<Cr>
+" basic send
+nnoremap <silent><M-e>n :FloatermReplSend<Cr>
+nnoremap <silent><M-e>l :FloatermReplSend!<Cr>
+xnoremap <silent><M-e>n :FloatermReplSendVisual<Cr>
+xnoremap <silent><M-e>l :FloatermReplSendVisual!<Cr>
+nnoremap <silent><M-e>q :FloatermReplSendExit<Cr>
+" block send
+xnoremap <silent><M-e><M-e>   :FloatermReplSendVisual<Cr>
+xnoremap <silent><M-e><Space> :FloatermReplSendVisual!<Cr>
+nnoremap <silent><M-e><M-e>   :FloatermReplSendBlock<Cr>
+nnoremap <silent><M-e><Space> :FloatermReplSendBlock!<Cr>
+" send above/below/all lines
+nnoremap <silent><M-e>b :FloatermReplSendFromBegin!<Cr>
+nnoremap <silent><M-e>e :FloatermReplSendToEnd!<Cr>
+nnoremap <silent><M-e>a :FloatermReplSendAll!<Cr>
+" send word
+nnoremap <silent><M-e>k :FloatermReplSendWord<Cr>
+xnoremap <silent><M-e>k :FloatermReplSendWord!<Cr>
+" mark print send
+nnoremap <silent><M-e><M-m> :FloatermReplMark<Cr>
+xnoremap <silent><M-e><M-m> :FloatermReplMark!<Cr>
+nnoremap <silent><M-e><M-l> :FloatermReplSendMark<Cr>
+nnoremap <silent><M-e><M-r> :FloatermReplQuickuiMark<Cr>
+" clear
+nnoremap <silent><M-e><M-c> :FloatermReplSendClear<Cr
+```
