@@ -2,17 +2,22 @@
 
 这是一个基于 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 的 Vim 插件，用于在浮动终端中与不同语言的 REPL (Read-Eval-Print Loop) 程序交互。
 
-## 原理
+# 需求
+- 有`:terminal` 命令的 vim或 neovim , 具体版本需求要比[vim-floaterm](https://github.com/voldikss/vim-floaterm)  要高一些
+- 安装相应的`repl` 程序，比如`ipython`, `radian`
 
-该插件的主要功能是允许用户将 Vim 编辑器中的代码片段发送到已启动的 REPL 程序中执行，并将结果显示在浮动终端中。其核心原理包括：
+# 原理
 
-1. **REPL 程序管理:**  通过全局变量 `g:floaterm_repl_programs` 存储不同文件类型关联的 REPL 启动命令。例如，Python 文件类型关联 `ipython` 或 `python3` 命令。
-2. **代码块标记:**  允许用户在代码中使用特定标记（例如 Python 中的 `# %%`）来定义代码块。插件会识别这些标记，方便用户按块发送代码。
-3. **清屏和退出命令:**  为不同编程语言的 REPL 定义了清屏和退出的命令，例如 JavaScript 的 `.clear` 和 `.exit`。
-4. **浮动终端交互:**  依赖 `vim-floaterm` 插件来创建和管理浮动终端，并在其中启动 REPL 程序。插件通过 `vim-floaterm` 提供的接口发送代码和命令。
-5. **代码发送流程:**  当用户执行发送代码的命令时，插件会获取选定的代码范围（当前行、选定行、代码块等），然后将其发送到与当前文件类型关联的 REPL 进程。
+该插件的主要功能是允许用户将 Vim/neovim 编辑器中的代码片段发送到已启动的 REPL 程序中执行，并将结果显示在浮动终端中。其核心原理包括：
 
-## 命令
+- **REPL 程序管理:**  通过全局变量 `g:floaterm_repl_programs` 存储不同文件类型关联的 REPL 启动命令。例如，Python 文件类型关联 `ipython` 或 `python3` 命令。
+- **代码块标记:**  允许用户在代码中使用特定标记（例如 Python 中的 `# %%`）来定义代码块。插件会识别这些标记，方便用户按块发送代码。
+- **清屏和退出命令:**  为不同编程语言的 REPL 定义了清屏和退出的命令，例如 JavaScript 的 `.clear` 和 `.exit`。
+- **浮动终端交互:**  依赖 `vim-floaterm` 插件来创建和管理浮动终端，并在其中启动 REPL 程序。插件通过 `vim-floaterm` 提供的接口发送代码和命令。`t:floaterm_repl_termnames` 是一个 tab 级别的变量，用于存储文件类型和 buffer number 组合的索引与浮动终端名称的映射关系，方便后续查找和操作对应的浮动终端。
+- **代码发送流程:**  当用户执行发送代码的命令时，插件会获取选定的代码范围（当前行、选定行、代码块等），然后将其发送到与当前文件类型关联的 REPL 进程。
+- **floaterm 位置动态调整:** 会根据屏幕 列/行比调整 floaterm window 的位置在右还是下面
+
+# 命令
 
 以下是 `vim-floaterm-repl` 插件提供的主要命令及其功能：
 
@@ -35,7 +40,7 @@
 * **`FloatermReplSendMark`**: 发送之前使用 `FloatermReplMark` 命令标记的代码。
 * **`FloatermReplQuickuiMark`**: （可能依赖 `vim-quickui` 插件）快速查看标记的代码。
 
-## 配置
+# 配置
 
 可以通过配置 Vim 全局变量来自定义插件的行为：
 
@@ -44,4 +49,4 @@
 * **`g:floaterm_repl_clear`**: 一个字典，用于配置不同文件类型的 REPL 清屏命令。
 * **`g:floaterm_repl_exit`**: 一个字典，用于配置不同文件类型的 REPL 退出命令。
 
-**注意:** 使用此插件需要先安装 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 插件。
+**注意:** 使用此插件需要先安装 [vim-floaterm](https://github.com/voldikss/vim-floaterm)插件。
