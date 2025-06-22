@@ -2,13 +2,22 @@
 
 [English Document](README.md)
 
-这是一个基于 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 的 Vim 插件，用于增强浮动终端的功能。
+这是一个基于 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 的 Vim 插件，用于增强浮动终端的功能。本插件提供两个主要功能：
+
+1. **REPL集成**: 将编辑器中的代码发送到浮动终端中的REPL进行执行
+2. **AsyncRun集成**: 通过asyncrun.vim在浮动终端中运行程序
 
 # 需求
 - 有`:terminal` 命令的 vim或 neovim , 具体版本需求要比[vim-floaterm](https://github.com/voldikss/vim-floaterm)  要高一些
 - 安装相应的`repl` 程序，比如`ipython`, `radian`
+- 安装 [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim).
+- 相关运行程序: `python`, `R`, `rustc` 等
 
-# 原理
+# REPL集成
+
+以下部分描述了本插件的REPL功能。
+
+## 原理
 
 该插件的主要功能是允许用户将 Vim/neovim 编辑器中的代码片段发送到已启动的 REPL 程序中执行，并将结果显示在浮动终端中。其核心原理包括：
 
@@ -19,7 +28,7 @@
 - **代码发送流程:**  当用户执行发送代码的命令时，插件会获取选定的代码范围（当前行、选定行、代码块等），然后将其发送到与当前文件类型关联的 REPL 进程。
 - **floaterm 位置动态调整:** 会根据屏幕 列/行比调整 floaterm window 的位置在右还是下面
 
-# 命令
+## 命令
 
 以下是 `vim-floaterm-repl` 插件提供的主要命令及其功能：
 
@@ -44,7 +53,7 @@
 * **`FloatermReplSendMark`**: 发送之前使用 `FloatermReplMark` 命令标记的代码。
 * **`FloatermReplQuickuiMark`**: （可能依赖 `vim-quickui` 插件）快速查看标记的代码。
 
-# 配置
+## 配置
 
 可以通过配置 Vim 全局变量来自定义插件的行为：
 
@@ -53,28 +62,8 @@
 * **`g:floaterm_repl_clear`**: 一个字典，用于配置不同文件类型的 REPL 清屏命令。
 * **`g:floaterm_repl_exit`**: 一个字典，用于配置不同文件类型的 REPL 退出命令。
 
-# 与asyncrun.vim的集成
 
-本插件提供了与[asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)的集成，可以在浮动终端中运行程序。以下runner被自动注册：
-
-* **`floaterm_right`**: 在右侧垂直分割终端中运行命令
-* **`floaterm_float`**: 在浮动终端窗口中运行命令
-* **`floaterm_bottom`**: 在底部水平分割终端中运行命令
-
-要在asyncrun.vim中使用这些runner，请在您的vimrc中添加以下配置：
-
-```vim
-" 在浮动终端中运行命令
-let g:asyncrun_runner = get(g:, 'asyncrun_runner', {})
-let g:asynctasks_term_pos = 'floaterm_float'
-
-" 使用runner的示例
-:AsyncRun -mode=term -pos=floaterm_float echo "Hello, World!"
-:AsyncRun -mode=term -pos=floaterm_right python %
-:AsyncRun -mode=term -pos=floaterm_bottom node %
-```
-
-# 典型keymap
+## 典型keymap
 > 使用`<M-e>`作为操作的前缀, 注意感叹号。
 ```
 " start
@@ -105,4 +94,39 @@ nnoremap <silent><M-e><M-l> :FloatermReplSendMark<Cr>
 nnoremap <silent><M-e><M-r> :FloatermReplQuickuiMark<Cr>
 " clear
 nnoremap <silent><M-e><M-c> :FloatermReplSendClear<Cr>
+```
+
+# AsyncRun.vim集成
+
+除了REPL功能外，本插件还提供了与[asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)的集成，可以在浮动终端中运行程序。
+
+## 功能特性
+
+以下runner被自动注册：
+
+* **`floaterm_right`**: 在右侧垂直分割终端中运行命令
+* **`floaterm_float`**: 在浮动终端窗口中运行命令
+* **`floaterm_bottom`**: 在底部水平分割终端中运行命令
+
+## 配置
+
+要在asyncrun.vim中使用这些runner，请在您的vimrc中添加以下配置：
+
+```vim
+" 在浮动终端中运行命令
+let g:asyncrun_runner = get(g:, 'asyncrun_runner', {})
+let g:asynctasks_term_pos = 'floaterm_float'
+```
+
+## 使用示例
+
+```vim
+" 在浮动终端中运行简单命令
+:AsyncRun -mode=term -pos=floaterm_float echo "Hello, World!"
+
+" 在右侧终端中运行 Python 脚本
+:AsyncRun -mode=term -pos=floaterm_right python %
+
+" 在底部终端中运行 Node.js 脚本
+:AsyncRun -mode=term -pos=floaterm_bottom node %
 ```

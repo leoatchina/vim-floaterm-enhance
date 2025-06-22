@@ -1,14 +1,23 @@
 # vim-floaterm-enhance
 [中文文档](README_cn.md)
 
-This is a Vim plugin based on [vim-floaterm](https://github.com/voldikss/vim-floaterm) for enhancing the floating terminal.
+This is a Vim plugin based on [vim-floaterm](https://github.com/voldikss/vim-floaterm) for enhancing the floating terminal. It provides two main features:
+
+1. **REPL Integration**: Send code from your editor to a REPL in a floating terminal
+2. **AsyncRun Integration**: Run programs in floating terminals through asyncrun.vim
 
 
 # Requirements
 - Vim or Neovim with the `:terminal` command. The specific version requirement is higher than [vim-floaterm](https://github.com/voldikss/vim-floaterm).
 - Install the corresponding `repl` program, such as `ipython`, `radian`.
+- Install [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim).
+- Related runner programs: `python`, `R`, `rustc`... etc
 
-# Principle
+# REPL Integration
+
+The following sections describe the REPL functionality of this plugin.
+
+## Principle
 
 The main function of this plugin is to allow users to send code snippets from the Vim/Neovim editor to a started REPL program for execution and display the results in a floating terminal. Its core principles include:
 
@@ -20,7 +29,7 @@ The main function of this plugin is to allow users to send code snippets from th
 - **Code Sending Process:** When the user executes a command to send code, the plugin obtains the selected code range (current line, selected lines, code block, etc.) and then sends it to the REPL process associated with the current file type.
 - **Dynamic Adjustment of Floaterm Position:** The position of the floaterm window (right or bottom) is adjusted according to the screen's column/row ratio.
 
-# Commands
+## Commands
 
 The following are the main commands and functions provided by the `vim-floaterm-repl` plugin:
 
@@ -43,7 +52,7 @@ The following are the main commands and functions provided by the `vim-floaterm-
 * **`FloatermReplSendMark`**: Send the code marked previously using the `FloatermReplMark` command.
 * **`FloatermReplQuickuiMark`**: (May depend on the `vim-quickui` plugin) Quickly view the marked code.
 
-# Configuration
+## Configuration
 
 You can customize the behavior of the plugin by configuring Vim global variables:
 
@@ -52,28 +61,9 @@ You can customize the behavior of the plugin by configuring Vim global variables
 * **`g:floaterm_repl_clear`**: A dictionary for configuring REPL clear screen commands for different file types.
 * **`g:floaterm_repl_exit`**: A dictionary for configuring REPL exit commands for different file types.
 
-# Integration with asyncrun.vim
 
-This plugin provides integration with [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) to run programs in floating terminals. The following runners are registered automatically:
+## Typical Keymaps
 
-* **`floaterm_right`**: Run commands in a vertical split terminal on the right side
-* **`floaterm_float`**: Run commands in a floating terminal window
-* **`floaterm_bottom`**: Run commands in a horizontal split terminal at the bottom
-
-To use these runners with asyncrun.vim, add the following configuration to your vimrc:
-
-```vim
-" Run commands in a floating terminal
-let g:asyncrun_runner = get(g:, 'asyncrun_runner', {})
-let g:asynctasks_term_pos = 'floaterm_float'
-
-" Example of using the runners
-:AsyncRun -mode=term -pos=floaterm_float echo "Hello, World!"
-:AsyncRun -mode=term -pos=floaterm_right python %
-:AsyncRun -mode=term -pos=floaterm_bottom node %
-```
-
-# Typical Keymaps
 > Use `<M-e>` as the prefix for operations, please note `!`.
 ```
 " start
@@ -106,3 +96,37 @@ nnoremap <silent><M-e><M-r> :FloatermReplQuickuiMark<Cr>
 nnoremap <silent><M-e><M-c> :FloatermReplSendClear<Cr>
 ```
 
+# AsyncRun.vim Integration
+
+In addition to the REPL functionality, this plugin provides integration with [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) to run programs in floating terminals.
+
+## Features
+
+The following runners are registered automatically:
+
+* **`floaterm_right`**: Run commands in a vertical split terminal on the right side
+* **`floaterm_float`**: Run commands in a floating terminal window
+* **`floaterm_bottom`**: Run commands in a horizontal split terminal at the bottom
+
+## Configuration
+
+To use these runners with asyncrun.vim, add the following configuration to your vimrc:
+
+```vim
+" Run commands in a floating terminal
+let g:asyncrun_runner = get(g:, 'asyncrun_runner', {})
+let g:asynctasks_term_pos = 'floaterm_float'
+```
+
+## Usage Examples
+
+```vim
+" Run a simple command in a floating terminal
+:AsyncRun -mode=term -pos=floaterm_float echo "Hello, World!"
+
+" Run a Python script in a right-side terminal
+:AsyncRun -mode=term -pos=floaterm_right python %
+
+" Run a Node.js script in a bottom terminal
+:AsyncRun -mode=term -pos=floaterm_bottom node %
+```
