@@ -31,25 +31,25 @@ let g:floaterm_repl_exit.r = 'quit'
 " ----------------------------------
 " update open postion
 " ----------------------------------
-call floaterm#repl#update_open_position()
-au VimResized * call floaterm#repl#update_open_position()
+call floaterm#repl#update_position()
+au VimResized * call floaterm#repl#update_position()
 " ----------------------------------
-" commands
-" <bang>0 means move forword
+" commands. NOTE <bang>0 means move forword
 " ----------------------------------
-command! -bang FloatermReplStart call floaterm#repl#start(<bang>0)
+command! -bang FloatermReplStart call floaterm#repl#start()
+command! -bang FloatermReplChoose call floaterm#repl#choose()
 command! -bang -range FloatermReplSend call floaterm#repl#send(<line1>, <line2>, <bang>0)
 command! -bang -range FloatermReplSendVisual call floaterm#repl#send(<line1>, <line2>, <bang>0, 1)
 command! -bang FloatermReplSendBlock call floaterm#repl#send_border("block", <bang>0)
 command! -bang FloatermReplSendFromBegin call floaterm#repl#send_border("begin", <bang>0)
 command! -bang FloatermReplSendToEnd call floaterm#repl#send_border("end", <bang>0)
 command! -bang FloatermReplSendAll call floaterm#repl#send_border("all", <bang>0)
-" send newline/clear/exit/cword
-command! FloatermReplSendNewlineOrStart call floaterm#repl#send(0, 0, 0)
-command! FloatermReplSendClear call floaterm#repl#send(1, 0, 0)
-command! FloatermReplSendExit call floaterm#repl#send(0, 1, 0)
+" Commands for newline/clear/exit using dedicated functions
+command! FloatermReplSendNewlineOrStart call floaterm#repl#send_newline()
+command! FloatermReplSendClear call floaterm#repl#send_clear()
+command! FloatermReplSendExit call floaterm#repl#send_exit()
 command! -bang -range FloatermReplSendWord call floaterm#repl#send_word(<bang>0)
 " mark
 command! -bang -range FloatermReplMark call floaterm#repl#mark(<bang>0)
 command! FloatermReplSendMark call floaterm#repl#send_mark()
-command! FloatermReplQuickuiMark call floaterm#repl#quickui_mark()
+command! FloatermReplShowMark call floaterm#repl#show_mark()

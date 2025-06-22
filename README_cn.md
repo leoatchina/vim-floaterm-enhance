@@ -1,8 +1,8 @@
-# vim-floaterm-repl
+# vim-floaterm-enhance
 
 [English Document](README.md)
 
-这是一个基于 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 的 Vim 插件，用于在浮动终端中与不同语言的 REPL (Read-Eval-Print Loop) 程序交互。
+这是一个基于 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 的 Vim 插件，用于增强浮动终端的功能。
 
 # 需求
 - 有`:terminal` 命令的 vim或 neovim , 具体版本需求要比[vim-floaterm](https://github.com/voldikss/vim-floaterm)  要高一些
@@ -52,6 +52,27 @@
 * **`g:floaterm_repl_block_mark`**: 一个字典，用于配置不同文件类型的代码块标记。
 * **`g:floaterm_repl_clear`**: 一个字典，用于配置不同文件类型的 REPL 清屏命令。
 * **`g:floaterm_repl_exit`**: 一个字典，用于配置不同文件类型的 REPL 退出命令。
+
+# 与asyncrun.vim的集成
+
+本插件提供了与[asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)的集成，可以在浮动终端中运行程序。以下runner被自动注册：
+
+* **`floaterm_right`**: 在右侧垂直分割终端中运行命令
+* **`floaterm_float`**: 在浮动终端窗口中运行命令
+* **`floaterm_bottom`**: 在底部水平分割终端中运行命令
+
+要在asyncrun.vim中使用这些runner，请在您的vimrc中添加以下配置：
+
+```vim
+" 在浮动终端中运行命令
+let g:asyncrun_runner = get(g:, 'asyncrun_runner', {})
+let g:asynctasks_term_pos = 'floaterm_float'
+
+" 使用runner的示例
+:AsyncRun -mode=term -pos=floaterm_float echo "Hello, World!"
+:AsyncRun -mode=term -pos=floaterm_right python %
+:AsyncRun -mode=term -pos=floaterm_bottom node %
+```
 
 # 典型keymap
 > 使用`<M-e>`作为操作的前缀, 注意感叹号。

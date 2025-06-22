@@ -1,7 +1,7 @@
-# vim-floaterm-repl
+# vim-floaterm-enhance
 [中文文档](README_cn.md)
 
-This is a Vim plugin based on [vim-floaterm](https://github.com/voldikss/vim-floaterm) for interacting with REPL (Read-Eval-Print Loop) programs of various languages in a floating terminal.
+This is a Vim plugin based on [vim-floaterm](https://github.com/voldikss/vim-floaterm) for enhancing the floating terminal.
 
 
 # Requirements
@@ -51,6 +51,27 @@ You can customize the behavior of the plugin by configuring Vim global variables
 * **`g:floaterm_repl_block_mark`**: A dictionary for configuring code block markers for different file types.
 * **`g:floaterm_repl_clear`**: A dictionary for configuring REPL clear screen commands for different file types.
 * **`g:floaterm_repl_exit`**: A dictionary for configuring REPL exit commands for different file types.
+
+# Integration with asyncrun.vim
+
+This plugin provides integration with [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) to run programs in floating terminals. The following runners are registered automatically:
+
+* **`floaterm_right`**: Run commands in a vertical split terminal on the right side
+* **`floaterm_float`**: Run commands in a floating terminal window
+* **`floaterm_bottom`**: Run commands in a horizontal split terminal at the bottom
+
+To use these runners with asyncrun.vim, add the following configuration to your vimrc:
+
+```vim
+" Run commands in a floating terminal
+let g:asyncrun_runner = get(g:, 'asyncrun_runner', {})
+let g:asynctasks_term_pos = 'floaterm_float'
+
+" Example of using the runners
+:AsyncRun -mode=term -pos=floaterm_float echo "Hello, World!"
+:AsyncRun -mode=term -pos=floaterm_right python %
+:AsyncRun -mode=term -pos=floaterm_bottom node %
+```
 
 # Typical Keymaps
 > Use `<M-e>` as the prefix for operations, please note `!`.
