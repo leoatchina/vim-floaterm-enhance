@@ -108,15 +108,6 @@ nnoremap <silent><M-e><M-c> :FloatermReplSendClear<Cr>
 * **`floaterm_float`**: 在浮动终端窗口中运行命令
 * **`floaterm_bottom`**: 在底部水平分割终端中运行命令
 
-## 配置
-
-要在asyncrun.vim中使用这些runner，请在您的vimrc中添加以下配置：
-
-```vim
-" 在浮动终端中运行命令
-let g:asyncrun_runner = get(g:, 'asyncrun_runner', {})
-let g:asynctasks_term_pos = 'floaterm_float'
-```
 
 ## 使用示例
 

@@ -107,16 +107,7 @@ The following runners are registered automatically:
 * **`floaterm_right`**: Run commands in a vertical split terminal on the right side
 * **`floaterm_float`**: Run commands in a floating terminal window
 * **`floaterm_bottom`**: Run commands in a horizontal split terminal at the bottom
-
-## Configuration
-
-To use these runners with asyncrun.vim, add the following configuration to your vimrc:
-
-```vim
-" Run commands in a floating terminal
-let g:asyncrun_runner = get(g:, 'asyncrun_runner', {})
-let g:asynctasks_term_pos = 'floaterm_float'
-```
+W
 
 ## Usage Examples
 
