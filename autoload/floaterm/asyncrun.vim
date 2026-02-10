@@ -1,4 +1,3 @@
-" cSpell:ignore asyncrun floaterm wintype buflist bufnr vsplit botright topleft
 function! floaterm#asyncrun#run(opts, floaterm_wintype, position)
     let opts = copy(a:opts)
     let floaterm_wintype = copy(a:floaterm_wintype)
@@ -7,13 +6,13 @@ function! floaterm#asyncrun#run(opts, floaterm_wintype, position)
         call preview#errmsg("Please update to vim8.1+/nvim0.6+ to run script in floating or popup window.")
         return
     endif
-    let found_floaterm = v:false
+    let found_floaterm = 0
     let buflist = floaterm#buflist#gather()
     if len(buflist) > 0
         for floaterm_bufnr in buflist
             " NOTE: found floaterm of same floaterm wintype and position
             if floaterm#config#get(floaterm_bufnr, 'wintype') == floaterm_wintype && floaterm#config#get(floaterm_bufnr, 'position') == position
-                let found_floaterm = v:true
+                let found_floaterm = 1
                 break
             endif
         endfor
@@ -49,7 +48,7 @@ function! floaterm#asyncrun#run(opts, floaterm_wintype, position)
         if has('nvim')
             stopinsert | noa wincmd p
         elseif floaterm_wintype != 'float'
-            call feedkeys("\<C-_>w", "n")
+            call feedkeys("\<C-\>\<C-n>:wincmd p\<C-m>", "n")
         endif
     elseif ft == 'floaterm'
         call floaterm#util#startinsert()
@@ -58,20 +57,23 @@ endfunction
 function! floaterm#asyncrun#right(opts)
     call floaterm#asyncrun#run(a:opts, 'vsplit', 'right')
 endfunction
+function! floaterm#asyncrun#left(opts)
+    call floaterm#asyncrun#run(a:opts, 'vsplit', 'left')
+endfunction
+function! floaterm#asyncrun#float(opts)
+    call floaterm#asyncrun#run(a:opts, 'float', 'center')
+endfunction
 function! floaterm#asyncrun#float_bottom(opts)
     call floaterm#asyncrun#run(a:opts, 'float', 'bottomright')
 endfunction
 function! floaterm#asyncrun#bottom(opts)
     call floaterm#asyncrun#run(a:opts, 'split', 'botright')
 endfunction
-function! floaterm#asyncrun#topleft(opts)
-    call floaterm#asyncrun#run(a:opts, 'vsplit', 'topleft')
-endfunction
 function! floaterm#asyncrun#top(opts)
     call floaterm#asyncrun#run(a:opts, 'split', 'top')
 endfunction
 function! floaterm#asyncrun#topleft(opts)
-    call floaterm#asyncrun#run(a:opts, 'float', 'topleft')
+    call floaterm#asyncrun#run(a:opts, 'vsplit', 'topleft')
 endfunction
 function! floaterm#asyncrun#center(opts)
     call floaterm#asyncrun#run(a:opts, 'float', 'center')

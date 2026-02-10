@@ -18,7 +18,6 @@ endfunction
 " Get range from begin line to current
 function! floaterm#enhance#get_begin() abort
     let curr_line = line('.')
-    let start = 1
     return [1, curr_line == 1 ? 1 : curr_line - 1]
 endfunction
 " Get range from current line to end
@@ -35,7 +34,7 @@ endfunction
 function! floaterm#enhance#get_block() abort
     let ft = &ft
     let comment = floaterm#enhance#get_comment(ft)
-    if type(g:floaterm_repl_block_mark[ft]) == v:t_list
+    if type(g:floaterm_repl_block_mark[ft]) == type([])
         let lst = []
         for each in g:floaterm_repl_block_mark[ft]
             call add(lst, '^' . each)
@@ -111,4 +110,323 @@ function! floaterm#enhance#showmsg(content, ...) abort
     if saveshow != 0
         set showmode
     endif
-endfunc
+endfunction
+
+" --------------------------------------------------------------
+" floaterm fzf list
+" --------------------------------------------------------------
+function! floaterm#enhance#term_open(line) abort
+    let bufnr = str2nr(matchstr(a:line, '^\d\+'))
+    if bufnr <= 0
+        call floaterm#enhance#showmsg('Invalid floaterm selection', 1)
+        return
+    endif
+    call floaterm#terminal#open_existing(bufnr)
+endfunction
+
+function! floaterm#enhance#term_fzflist() abort
+    if !exists('*fzf#run')
+        call floaterm#enhance#showmsg('fzf.vim is required for FloatermFzfList', 1)
+        return
+    endif
+    let bufs = floaterm#buflist#gather()
+    if empty(bufs)
+        call floaterm#enhance#showmsg('No floaterm windows', 1)
+        return
+    endif
+    let cnt = len(bufs)
+    let source = []
+    for bufnr in bufs
+        let title = floaterm#config#get(bufnr, 'title')
+        if title ==# 'floaterm($1/$2)'
+            let cur = index(bufs, bufnr) + 1
+            let title = substitute(title, '$1', cur, 'gm')
+            let title = substitute(title, '$2', cnt, 'gm')
+        endif
+        if empty(title)
+            let title = printf('floaterm(%d/%d)', index(bufs, bufnr) + 1, cnt)
+        endif
+        let position = floaterm#config#get(bufnr, 'position')
+        let wintype = floaterm#config#get(bufnr, 'wintype')
+        let cmd = trim(floaterm#config#get(bufnr, 'cmd'))
+        let program = floaterm#config#get(bufnr, 'program', 'PROG')
+        let display = printf("%s#%d\t%s!%s@%s/%s", program, bufnr, title, cmd, wintype, position)
+        call add(source, display)
+    endfor
+    let spec = {
+                \ 'source': source,
+                \ 'sink': function('floaterm#enhance#term_open'),
+                \ 'options': ['--prompt', 'floaterm> ', '--layout=reverse-list'],
+                \ }
+    call fzf#run(fzf#wrap('FloatermFzfList', spec, 0))
+endfunction
+
+" --------------------------------------------------------------
+" get file path/dir/line range
+" --------------------------------------------------------------
+function! floaterm#enhance#get_file_absdir() abort
+    return substitute(expand('%:p:h', 1), '\', '/', 'g')
+endfunction
+function! floaterm#enhance#get_file_abspath() abort
+    return substitute(expand('%:p', 1), '\', '/', 'g')
+endfunction
+function! floaterm#enhance#get_file_line_range(start, end) abort
+    let range = floaterm#enhance#get_file_abspath() . '#L' . a:start
+    if a:start != a:end
+        let range .= '-L' . a:end
+    endif
+    return range
+endfunction
+" -------------------------------------
+" parse floaterm options
+" -------------------------------------
+function! floaterm#enhance#get_opt_param(optstr, check) abort
+    let optstr = a:optstr
+    let check = a:check
+    if type(optstr) != type('') || type(check) != type('') || index(['wintype', 'position', 'title', 'width', 'height'], check) < 0
+        return ''
+    endif
+    let key = '--' . check
+    let pat = key . '\%([[:space:]]\|=\)\zs\S\+'
+    return matchstr(optstr, pat)
+endfunction
+function! floaterm#enhance#parse_opt(...) abort
+    let col_row_ratio = get(g:, 'floaterm_prog_col_row_ratio', 2.5)
+    let split_ration = get(g:, 'floaterm_prog_split_ratio', 0.38)
+    let float_ratio = get(g:, 'floaterm_prog_float_ratio', 0.45)
+    " postions
+    let basic_postions = ['auto', 'center', 'right', 'bottom', 'left', 'top', 'leftabove', 'aboveleft', 'rightbelow', 'belowright', 'botright']
+    let float_postions = ['topleft', 'topright', 'bottomleft', 'bottomright', 'cusor']
+    let all_postions = basic_postions + float_postions
+    let open_position = get(g:, 'floaterm_prog_open_postion', 'auto')
+    " wintypes
+    if has('nvim')
+        let wintypes = ['split', 'vsplit', 'float']
+    else
+        let wintypes = ['split', 'vsplit']
+    endif
+    let width_opt = ''
+    let height_opt = ''
+    let title_opt = ''
+    let wintype_opt = ''
+    if a:0 && type(a:1) == type('') && len(trim(a:1))
+        let optstr = trim(a:1)
+        " width
+        let width = floaterm#enhance#get_opt_param(optstr, 'width')
+        if !empty(width)
+            let width_opt = '--width=' . width
+        endif
+        " height
+        let height = floaterm#enhance#get_opt_param(optstr, 'height')
+        if !empty(height)
+            let height_opt = '--height=' . height
+        endif
+        " title
+        let title = floaterm#enhance#get_opt_param(optstr, 'title')
+        if !empty(title)
+            let title_opt = '--title=' . title
+        endif
+        " wintype
+        let wintype = floaterm#enhance#get_opt_param(optstr, 'wintype')
+        if !empty(wintype) && index(wintypes, wintype) >= 0
+            let wintype_opt = '--wintype=' . wintype
+        else
+            let wintype_opt = ''
+        endif
+        " NOTE: open_position
+        let pos = floaterm#enhance#get_opt_param(optstr, 'position')
+        if !empty(pos)
+            if has('nvim') && index(all_postions, pos) >= 0
+                let open_position = pos
+            elseif index(basic_postions, pos) >= 0
+                let open_position = pos
+            else
+                let open_position = 'auto'
+            endif
+        endif
+    endif
+    " setup width_height_opt
+    if open_position ==# 'auto'
+        if col_row_ratio > 0
+            if &columns > &lines * col_row_ratio
+                let open_position = 'right'
+            else
+                let open_position = 'bottom'
+            endif
+        else
+            let open_position = 'right'
+        endif
+    endif
+    if open_position == 'right' && empty(width_opt)
+        let width_opt = '--width=' . split_ration
+    elseif open_position == 'bottom' && empty(height_opt)
+        let height_opt = '--height=' . split_ration
+    else
+        if empty(width_opt)
+            let width_opt = '--width=' . float_ratio
+        endif
+        if empty(height_opt)
+            let height_opt = '--height=' . float_ratio
+        endif
+    endif
+    " setup misc_opt
+    let misc_opt = printf('%s %s', width_opt, height_opt)
+    " return result: NOTE, wintype must be the first one
+    if wintype_opt ==# '--wintype=float'
+        if open_position ==# 'auto'
+            let open_position = 'topright'
+        endif
+    elseif open_position ==# 'right' && empty(wintype_opt)
+        let wintype_opt = '--wintype=vsplit'
+    elseif open_position ==# 'bottom' && empty(wintype_opt)
+        let wintype_opt = '--wintype=split'
+    endif
+    let result = wintype_opt . printf(' --position=%s %s %s', open_position, title_opt, misc_opt)
+    let result = substitute(result, '\s\+', ' ', 'g')
+    return result
+endfunction
+" parse programs
+function! floaterm#enhance#parse_programs(programs, type) abort
+    if empty(a:programs)
+        call floaterm#enhance#showmsg(printf('No %s programs configured', a:type), 1)
+        return []
+    endif
+    let result = []
+    let check_lst = []
+    for entry in a:programs
+        if type(entry) == type('')
+            let entry = [entry, '']
+        elseif type(entry) != type([]) || !len(entry)
+            continue
+        elseif len(entry) == 1
+            call add(entry, '')
+        endif
+        let cmd = entry[0]
+        if executable(split(cmd, ' ')[0])
+            let opts = floaterm#enhance#parse_opt(entry[1])
+            if len(entry) >= 3
+                let type = trim(entry[2])
+            else
+                let type = a:type
+            endif
+            let check = cmd . '-' . opts . '-' . type
+            if index(check_lst, check) < 0
+                call add(check_lst, check)
+                call add(result, [cmd, opts, type])
+            endif
+        endif
+    endfor
+    return result
+endfunction
+" --------------------------------------------------------------
+" fzf select and run programs
+" --------------------------------------------------------------
+function! floaterm#enhance#wincmdp() abort
+    if has('nvim')
+        stopinsert | noa wincmd p
+    else
+        wincmd p
+        checktime
+    endif
+endfunction
+function! floaterm#enhance#create_idx(...) abort
+    if a:0 && type(a:1) == type('') && a:1
+        let ft = a:1
+    else
+        let ft = &ft
+    endif
+    if a:0 && type(a:2) == type(0) && a:2
+        let bufnr = a:2
+    else
+        let bufnr = winbufnr(winnr())
+    endif
+    return ft . '-' . bufnr
+endfunction
+function! floaterm#enhance#cmd_run(cmd, opts, type, ...) abort
+    let type = tolower(a:type)
+    let idx = floaterm#enhance#create_idx()
+    let cmd = trim(a:cmd)
+    let opts = a:opts
+    let wintype = floaterm#enhance#get_opt_param(opts, 'wintype')
+    let check_string = printf("%s-%s", split(cmd, ' ')[0], wintype)
+    for bufnr in floaterm#buflist#gather()
+        let buf_cmd = split(trim(floaterm#config#get(bufnr, 'cmd', '')), ' ')[0]
+        let buf_wintype = floaterm#config#get(bufnr, 'wintype', '')
+        if check_string ==# printf("%s-%s", buf_cmd, buf_wintype)
+            call floaterm#terminal#open_existing(bufnr)
+            return
+        endif
+    endfor
+    call execute(printf('FloatermNew %s %s', opts, cmd))
+    let bufnr = floaterm#buflist#curr()
+    call floaterm#config#set(bufnr, 'program', a:type)
+    if type ==# 'ai'
+        call floaterm#ai#set_ai_bufnr(bufnr)
+    elseif type ==# 'repl'
+        call floaterm#repl#set_repl_bufnr(bufnr, idx)
+    endif
+    " wincmdp
+    let wincmdp = a:0 && type(a:1) == type(0) && a:1 ? 1 : 0
+    if wincmdp
+        call floaterm#enhance#wincmdp()
+    endif
+endfunction
+
+function! floaterm#enhance#fzf_run(programs, prompt, ...) abort
+    if empty(a:programs)
+        call floaterm#enhance#showmsg('No programs provided', 1)
+        return
+    endif
+    let prompt = a:prompt
+    let l:wincmdp = a:0 && type(a:1) == type(0) && a:1 ? 1 : 0
+    let l:source = []
+    let l:done = v:false
+    let l:selected = v:null
+    let l:program_map = {}
+    for item in a:programs
+        if type(item) != type([]) || len(item) < 3
+            continue
+        endif
+        let cmd = item[0]
+        let opts = item[1]
+        let type = item[2]
+        let display = printf('%s|%s %s', type, cmd, opts)
+        let l:program_map[display] = [cmd, opts, type]
+        call add(l:source, display)
+    endfor
+    if empty(l:source)
+        call floaterm#enhance#showmsg('No valid programs available', 1)
+        return
+    endif
+    " sink to select
+    function! s:floaterm_program_sink(selection) abort closure
+        if empty(a:selection) || !has_key(l:program_map, a:selection)
+            let l:selected = v:null
+        else
+            let l:selected = a:selection
+        endif
+        call s:floaterm_program_finish()
+    endfunction
+    " exit
+    function! s:floaterm_program_exit(code) abort closure
+        let l:selected = v:null
+        call s:floaterm_program_finish()
+    endfunction
+    " finish and call
+    function! s:floaterm_program_finish() abort closure
+        if empty(l:selected)
+            return
+        else
+            let [cmd, opts, type] = l:program_map[l:selected]
+            call floaterm#enhance#cmd_run(cmd, opts, type, l:wincmdp)
+        endif
+    endfunction
+    " fzf run spect
+    let l:spec = {
+                \ 'source': l:source,
+                \ 'sink': function('s:floaterm_program_sink'),
+                \ 'exit': function('s:floaterm_program_exit'),
+                \ 'options': ['--prompt', prompt . '> ', '--layout=reverse-list'],
+                \ }
+    call fzf#run(fzf#wrap('FloatermProgram', l:spec, 0))
+endfunction
