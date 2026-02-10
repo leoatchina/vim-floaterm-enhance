@@ -53,8 +53,8 @@ graph TB
 | n | `:FloatermAiStart!` | 启动默认 AI (立即执行) |
 | n | `:FloatermAiSendCr` | 向 AI 终端发送回车键 |
 | **发送上下文** |
-| n/v | `:FloatermAiSendLineRange` | 发送当前行/选区,执行后跳转到 AI 终端 |
-| n/v | `:FloatermAiSendLineRange!` | 发送当前行/选区,执行后保持在当前缓冲区 |
+| n/v | `:FloatermAiSendLine` | 发送当前行/选区,执行后跳转到 AI 终端 |
+| n/v | `:FloatermAiSendLine!` | 发送当前行/选区,执行后保持在当前缓冲区 |
 | n | `:FloatermAiSendFile` | 发送当前文件路径,执行后跳转到 AI 终端 |
 | n | `:FloatermAiSendFile!` | 发送当前文件路径,执行后保持在当前缓冲区 |
 | n | `:FloatermAiSendDir` | 发送当前目录路径,执行后跳转到 AI 终端 |

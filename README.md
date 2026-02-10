@@ -112,8 +112,8 @@ This module allows you to send context (files, lines, directories) to an AI tool
 | n | `:FloatermAiStart!` | Start default AI (Execute immediately) |
 | n | `:FloatermAiSendCr` | Send Enter key to AI terminal |
 | **Send Context** |
-| n/v | `:FloatermAiSendLineRange` | Send current line/selection, jump to AI terminal |
-| n/v | `:FloatermAiSendLineRange!` | Send current line/selection, stay in current buffer |
+| n/v | `:FloatermAiSendLine` | Send current line/selection, jump to AI terminal |
+| n/v | `:FloatermAiSendLine!` | Send current line/selection, stay in current buffer |
 | n | `:FloatermAiSendFile` | Send current file path, jump to AI terminal |
 | n | `:FloatermAiSendFile!` | Send current file path, stay in current buffer |
 | n | `:FloatermAiSendDir` | Send current directory path, jump to AI terminal |
