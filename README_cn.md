@@ -6,9 +6,25 @@
 
 ---
 
-# 安装
+# 依赖
 
-**前提**：需要 Vim 8+（要有 `:terminal`）或 Neovim 0.8+，并先装好 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 和 [fzf.vim](https://github.com/junegunn/fzf.vim)。
+**必需**
+- Vim 8+（要有 `:terminal`）或 Neovim 0.8+
+- [vim-floaterm](https://github.com/voldikss/vim-floaterm)
+- [fzf.vim](https://github.com/junegunn/fzf.vim) — 交互式选择要用
+
+**AI 功能**
+- 装一个支持 CLI 交互的 AI 工具就行，比如 `claude`、`codex`、`opencode`
+
+**REPL 功能**
+- 对应语言的 REPL 程序：Python 的 `ipython`/`python`，R 的 `radian`/`R`，Node.js 的 `node` 等
+
+**AsyncRun 功能**
+- [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)
+
+---
+
+# 安装
 
 **vim-plug**
 
@@ -25,7 +41,6 @@ Plug 'leoatchina/vim-floaterm-enhance'
   dependencies = { 'voldikss/vim-floaterm' },
 }
 ```
-
 
 ---
 
@@ -242,24 +257,6 @@ graph TB
 | `g:floaterm_prog_split_ratio` | Float | 分割窗口比例，默认 0.38 |
 | `g:floaterm_prog_float_ratio` | Float | 浮动窗口比例，默认 0.45 |
 | `g:floaterm_prog_col_row_ratio` | Float | 宽高比阈值，超过这个值自动用右侧分割而不是底部，默认 2.5 |
-
----
-
-# 依赖
-
-**必需**
-- Vim 8+（要有 `:terminal`）或 Neovim
-- [vim-floaterm](https://github.com/voldikss/vim-floaterm)
-- [fzf.vim](https://github.com/junegunn/fzf.vim) — 交互式选择要用
-
-**AI 功能**
-- 装一个支持 CLI 交互的 AI 工具就行，比如 `claude`、`codex`、`opencode`
-
-**REPL 功能**
-- 对应语言的 REPL 程序：Python 的 `ipython`/`python`，R 的 `radian`/`R`，Node.js 的 `node` 等
-
-**AsyncRun 功能**
-- [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)
 
 ---
 

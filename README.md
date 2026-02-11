@@ -6,9 +6,25 @@ An enhancement plugin for [vim-floaterm](https://github.com/voldikss/vim-floater
 
 ---
 
-# Installation
+# Requirements
 
-**Prerequisite**: Requires Vim 8+ (with `:terminal`) or Neovim 0.8+. Install [vim-floaterm](https://github.com/voldikss/vim-floaterm) and [fzf.vim](https://github.com/junegunn/fzf.vim) first.
+**Required**
+- Vim 8+ (with `:terminal`) or Neovim 0.8+
+- [vim-floaterm](https://github.com/voldikss/vim-floaterm)
+- [fzf.vim](https://github.com/junegunn/fzf.vim) for interactive selection
+
+**For AI features**
+- Any CLI-based AI tool: `claude`, `codex`, `opencode`, etc.
+
+**For REPL features**
+- Language-specific REPL programs: `ipython`/`python` for Python, `radian`/`R` for R, `node` for Node.js, etc.
+
+**For AsyncRun features**
+- [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)
+
+---
+
+# Installation
 
 **vim-plug**
 
@@ -25,7 +41,6 @@ Plug 'leatchina/vim-floaterm-enhance'
   dependencies = { 'voldikss/vim-floaterm' },
 }
 ```
-
 
 ---
 
@@ -241,24 +256,6 @@ The `:FloatermFzfList` command uses FZF to list all floaterm terminal windows fo
 | `g:floaterm_prog_split_ratio` | Float | Split window ratio, default 0.38 |
 | `g:floaterm_prog_float_ratio` | Float | Float window ratio, default 0.45 |
 | `g:floaterm_prog_col_row_ratio` | Float | Col/row threshold — above this uses right split instead of bottom, default 2.5 |
-
----
-
-# Requirements
-
-**Required**
-- Vim 8+ (with `:terminal`) or Neovim
-- [vim-floaterm](https://github.com/voldikss/vim-floaterm)
-- [fzf.vim](https://github.com/junegunn/fzf.vim) for interactive selection
-
-**For AI features**
-- Any CLI-based AI tool: `claude`, `codex`, `opencode`, etc.
-
-**For REPL features**
-- Language-specific REPL programs: `ipython`/`python` for Python, `radian`/`R` for R, `node` for Node.js, etc.
-
-**For AsyncRun features**
-- [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)
 
 ---
 
