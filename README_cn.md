@@ -8,7 +8,7 @@
 
 # 安装
 
-**前提**：先装好 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 和 [fzf.vim](https://github.com/junegunn/fzf.vim)。
+**前提**：需要 Vim 8+（要有 `:terminal`）或 Neovim 0.8+，并先装好 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 和 [fzf.vim](https://github.com/junegunn/fzf.vim)。
 
 **vim-plug**
 

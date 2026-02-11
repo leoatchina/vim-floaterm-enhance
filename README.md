@@ -8,7 +8,7 @@ An enhancement plugin for [vim-floaterm](https://github.com/voldikss/vim-floater
 
 # Installation
 
-**Prerequisite**: Install [vim-floaterm](https://github.com/voldikss/vim-floaterm) and [fzf.vim](https://github.com/junegunn/fzf.vim) first.
+**Prerequisite**: Requires Vim 8+ (with `:terminal`) or Neovim 0.8+. Install [vim-floaterm](https://github.com/voldikss/vim-floaterm) and [fzf.vim](https://github.com/junegunn/fzf.vim) first.
 
 **vim-plug**
 
