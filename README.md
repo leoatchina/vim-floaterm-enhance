@@ -2,7 +2,9 @@
 
 [中文文档](README_cn.md)
 
-An enhancement plugin for [vim-floaterm](https://github.com/voldikss/vim-floaterm). Send files and code to AI CLI tools (claude, opencode, etc.) right from Vim, run code in REPL sessions, or execute commands via AsyncRun in floating terminals.
+An enhancement plugin for [vim-floaterm](https://github.com/voldikss/vim-floaterm). **Fully compatible with both Vim 8+ and Neovim**, offering one of the few solutions in the Vim ecosystem for direct interaction with AI CLI tools.
+
+Leverages floaterm's floating terminal capabilities to seamlessly integrate multiple AI tools (Claude, OpenCode, etc.) and various REPLs (Python, R, Node.js, etc.), enabling code sending, file interaction, and command execution without leaving your editor.
 
 ---
 

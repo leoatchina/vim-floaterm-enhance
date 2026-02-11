@@ -2,7 +2,9 @@
 
 [English](README.md)
 
-基于 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 的增强插件。在 Vim 里直接跟 AI CLI 工具（claude、opencode 等）交互，把代码丢给 REPL 执行，或者用 AsyncRun 在浮动终端里跑命令。
+基于 [vim-floaterm](https://github.com/voldikss/vim-floaterm) 的增强插件。**同时兼容 Vim 8+ 和 Neovim**，是 Vim 生态中少有的能直接与 AI CLI 工具交互的解决方案。
+
+充分利用 floaterm 的浮动终端特性，无缝集成多种 AI 工具（Claude、OpenCode 等）和各类 REPL（Python、R、Node.js 等），让你在编辑器内就能完成代码发送、文件交互和命令执行。
 
 ---
 
