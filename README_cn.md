@@ -8,7 +8,7 @@
 
 ---
 
-# 依赖
+## 1. 依赖
 
 **必需**
 - Vim 8+（要有 `:terminal`）或 Neovim 0.8+
@@ -26,7 +26,7 @@
 
 ---
 
-# 安装
+## 2. 安装
 
 **vim-plug**
 
@@ -46,9 +46,9 @@ Plug 'leoatchina/vim-floaterm-enhance'
 
 ---
 
-# 配置
+## 3. 配置
 
-## AI 配置
+### 3.1. AI 配置
 
 在 vimrc 里设置 `g:floaterm_ai_programs`：
 
@@ -62,7 +62,7 @@ let g:floaterm_ai_programs = [
 " 第三个参数可以不写，默认是 "AI"
 ```
 
-## REPL 配置
+### 3.2. REPL 配置
 
 REPL 的配置跟 AI 不一样。插件启动时已经内置了常见语言的 REPL 程序（Python 用 ipython，R 用 radian 等等），所以大部分情况下你不需要额外配置。
 
@@ -82,11 +82,11 @@ call floaterm#repl#update_program('julia', ['julia'], '--wintype=vsplit')
 
 ---
 
-# AI 集成
+## 4. AI 集成
 
 在 Vim 里写代码的时候，可以直接把文件、代码片段、目录路径丢给 claude、opencode 这些 AI CLI 工具，不用切窗口。
 
-## AI 缓冲区管理
+### 4.1. AI 缓冲区管理
 
 所有 AI 终端的 bufnr 存在 `g:floaterm_ai_lst`（List）里，**最近使用的排在最前面**（MRU 顺序）。发送内容时，插件总是取 `lst[0]` 作为目标终端。
 
@@ -94,7 +94,7 @@ call floaterm#repl#update_program('julia', ['julia'], '--wintype=vsplit')
 - **切换时**：每次 `FloatermOpen` 事件触发，如果打开的终端 `program == 'AI'`，自动把它提到列表头部
 - **清理**：每次获取 bufnr 时，自动过滤掉已经不存在的终端（对比 `floaterm#buflist#gather()`）
 
-## 启动流程
+### 4.2. 启动流程
 
 ```mermaid
 graph TB
@@ -112,7 +112,7 @@ graph TB
     style PushFront fill:#e1f5fe
 ```
 
-## 发送上下文流程
+### 4.3. 发送上下文流程
 
 ```mermaid
 graph TB
@@ -133,7 +133,7 @@ graph TB
     style GetBuf fill:#e1f5fe
 ```
 
-## AI 行范围示例
+### 4.4. AI 行范围示例
 
 `FloatermAiSendLine` 会把文件路径和行范围格式化成 `@filepath#Lstart-Lend`，这是 Claude 等 AI CLI 工具能识别的文件引用格式：
 
@@ -152,7 +152,7 @@ graph TB
 " 单行时只有 #Lx，多行时是 #Lx-Ly
 ```
 
-## AI 命令
+### 4.5. AI 命令
 
 | 模式 | 命令 | 说明 |
 | :--- | :--- | :--- |
@@ -169,11 +169,11 @@ graph TB
 
 ---
 
-# REPL 集成
+## 5. REPL 集成
 
 把编辑器里的代码直接发到 ipython、R、node 这些 REPL 里执行，支持逐行、代码块、整个文件等多种方式。
 
-## REPL 缓冲区管理
+### 5.1. REPL 缓冲区管理
 
 REPL 终端的 bufnr 存在 `g:floaterm_repl_dict`（Dict）里，key 格式为 `{filetype}-{source_bufnr}`。这意味着**每个源文件可以有自己独立的 REPL**。
 
@@ -182,7 +182,7 @@ REPL 终端的 bufnr 存在 `g:floaterm_repl_dict`（Dict）里，key 格式为 
 - **发送时**：根据当前文件的 idx 查找对应的 REPL bufnr，并验证该终端是否仍然存在
 - **清理**：如果查找到的 bufnr 已不在 `floaterm#buflist#gather()` 中，自动从字典中移除
 
-## 启动流程
+### 5.2. 启动流程
 
 ```mermaid
 graph TB
@@ -206,7 +206,7 @@ graph TB
     style StoreMap fill:#e1f5fe
 ```
 
-## 代码发送流程
+### 5.3. 代码发送流程
 
 ```mermaid
 graph TB
@@ -226,11 +226,11 @@ graph TB
     style GenIdx fill:#e1f5fe
 ```
 
-## 代码块（Block）模式
+### 5.4. 代码块（Block）模式
 
 `FloatermReplSendBlock` 用专门的注释标记把文件分成多个代码块，类似 Jupyter Notebook 的 Cell。光标所在的块会被发送到 REPL。
 
-### 块分隔符
+#### 5.4.1. 块分隔符
 
 通过 `g:floaterm_repl_block_mark` 配置，内置了常见语言的标记：
 
@@ -241,11 +241,11 @@ graph TB
 | Vim | `" %%` |
 | 其他语言 | `# %%`（默认） |
 
-### 块定位原理
+#### 5.4.2. 块定位原理
 
 光标所在位置向上搜索最近的分隔符作为块开始，向下搜索最近的分隔符作为块结束。分隔符行本身不包含在发送内容中。如果向上找不到分隔符，则从文件开头开始；向下找不到则到文件末尾。
 
-### 示例
+#### 5.4.3. 示例
 
 ```python
 # %% 数据加载
@@ -274,7 +274,7 @@ let g:floaterm_repl_block_mark.python = ['# %%', '# BLOCK']
 let g:floaterm_repl_block_mark.go = '// %%'
 ```
 
-## REPL 命令
+### 5.5. REPL 命令
 
 | 模式 | 命令 | 说明 |
 | :--- | :--- | :--- |
@@ -299,7 +299,7 @@ let g:floaterm_repl_block_mark.go = '// %%'
 
 ---
 
-# AsyncRun 集成
+## 6. AsyncRun 集成
 
 跟 [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) 配合，在浮动终端里跑命令。插件自动注册了三个 runner：
 
@@ -335,7 +335,7 @@ graph TB
 
 ---
 
-# 终端列表
+## 7. 终端列表
 
 `:FloatermFzfList` 命令通过 FZF 列出所有 floaterm 终端窗口，方便快速切换。每个条目会显示终端的程序类型、缓冲区号、标题、命令、窗口类型和位置等信息。
 
@@ -345,7 +345,7 @@ graph TB
 
 ---
 
-# 核心变量
+## 8. 核心变量
 
 | 变量 | 类型 | 说明 |
 |------|------|------|
@@ -359,7 +359,7 @@ graph TB
 
 ---
 
-# 类似插件
+## 9. 类似插件
 
 如果你用 Neovim 想要更深度的 AI 集成，可以看看这些：
 

@@ -8,7 +8,7 @@ Leverages floaterm's floating terminal capabilities to seamlessly integrate mult
 
 ---
 
-# Requirements
+## 1. Requirements
 
 **Required**
 - Vim 8+ (with `:terminal`) or Neovim 0.8+
@@ -26,7 +26,7 @@ Leverages floaterm's floating terminal capabilities to seamlessly integrate mult
 
 ---
 
-# Installation
+## 2. Installation
 
 **vim-plug**
 
@@ -46,9 +46,9 @@ Plug 'leatchina/vim-floaterm-enhance'
 
 ---
 
-# Configuration
+## 3. Configuration
 
-## AI
+### 3.1. AI
 
 Set `g:floaterm_ai_programs` in your vimrc:
 
@@ -62,7 +62,7 @@ let g:floaterm_ai_programs = [
 " The third element defaults to "AI" if omitted.
 ```
 
-## REPL
+### 3.2. REPL
 
 REPL configuration works differently from AI. The plugin ships with built-in REPL programs for common languages (ipython for Python, radian for R, etc.), so most users don't need extra config.
 
@@ -81,11 +81,11 @@ See [plugin/floaterm-repl.vim](plugin/floaterm-repl.vim) for the full list of bu
 
 ---
 
-# AI Integration
+## 4. AI Integration
 
 Send files, code snippets, and directory paths to AI CLI tools without leaving Vim.
 
-## AI Buffer Management
+### 4.1. AI Buffer Management
 
 All AI terminal bufnrs are stored in `g:floaterm_ai_lst` (List), with the **most recently used at the front** (MRU order). When sending content, the plugin always picks `lst[0]` as the target terminal.
 
@@ -93,7 +93,7 @@ All AI terminal bufnrs are stored in `g:floaterm_ai_lst` (List), with the **most
 - **On switch**: Every `FloatermOpen` event checks if the opened terminal has `program == 'AI'`, and automatically moves it to the front
 - **Cleanup**: Each time a bufnr is retrieved, stale entries (terminals no longer in `floaterm#buflist#gather()`) are filtered out
 
-## Startup Flow
+### 4.2. Startup Flow
 
 ```mermaid
 graph TB
@@ -111,7 +111,7 @@ graph TB
     style PushFront fill:#e1f5fe
 ```
 
-## Context Sending Flow
+### 4.3. Context Sending Flow
 
 ```mermaid
 graph TB
@@ -132,7 +132,7 @@ graph TB
     style GetBuf fill:#e1f5fe
 ```
 
-## Line Range Example
+### 4.4. Line Range Example
 
 `FloatermAiSendLine` formats the file path and line range as `@filepath#Lstart-Lend`, which is the file reference format recognized by Claude and other AI CLI tools:
 
@@ -151,7 +151,7 @@ graph TB
 " Single line produces #Lx, multiple lines produce #Lx-Ly
 ```
 
-## AI Commands
+### 4.5. AI Commands
 
 | Mode | Command | Description |
 | :--- | :--- | :--- |
@@ -168,11 +168,11 @@ graph TB
 
 ---
 
-# REPL Integration
+## 5. REPL Integration
 
 Send code from your editor to ipython, R, node, or any REPL running in a floating terminal. Supports line-by-line, code blocks, entire files, and more.
 
-## REPL Buffer Management
+### 5.1. REPL Buffer Management
 
 REPL terminal bufnrs are stored in `g:floaterm_repl_dict` (Dict), with keys in the format `{filetype}-{source_bufnr}`. This means **each source file can have its own independent REPL**.
 
@@ -181,7 +181,7 @@ REPL terminal bufnrs are stored in `g:floaterm_repl_dict` (Dict), with keys in t
 - **On send**: Looks up the REPL bufnr by the current file's idx, and validates the terminal still exists
 - **Cleanup**: If the looked-up bufnr is no longer in `floaterm#buflist#gather()`, it is automatically removed from the dict
 
-## Startup Flow
+### 5.2. Startup Flow
 
 ```mermaid
 graph TB
@@ -205,7 +205,7 @@ graph TB
     style StoreMap fill:#e1f5fe
 ```
 
-## Code Sending Flow
+### 5.3. Code Sending Flow
 
 ```mermaid
 graph TB
@@ -225,11 +225,11 @@ graph TB
     style GenIdx fill:#e1f5fe
 ```
 
-## Code Block Mode
+### 5.4. Code Block Mode
 
 `FloatermReplSendBlock` splits a file into code blocks using special comment markers, similar to Jupyter Notebook cells. The block under the cursor is sent to the REPL.
 
-### Block Delimiters
+#### 5.4.1. Block Delimiters
 
 Configured via `g:floaterm_repl_block_mark`. Built-in patterns for common languages:
 
@@ -240,11 +240,11 @@ Configured via `g:floaterm_repl_block_mark`. Built-in patterns for common langua
 | Vim | `" %%` |
 | Other languages | `# %%` (default) |
 
-### How Block Detection Works
+#### 5.4.2. How Block Detection Works
 
 From the cursor position, the plugin searches **backward** for the nearest delimiter (block start) and **forward** for the nearest delimiter (block end). The delimiter lines themselves are excluded from the sent content. If no delimiter is found above, the block starts from the beginning of the file; if none below, it extends to the end.
 
-### Example
+#### 5.4.3. Example
 
 ```python
 # %% Data loading
@@ -273,7 +273,7 @@ let g:floaterm_repl_block_mark.python = ['# %%', '# BLOCK']
 let g:floaterm_repl_block_mark.go = '// %%'
 ```
 
-## REPL Commands
+### 5.5. REPL Commands
 
 | Mode | Command | Description |
 | :--- | :--- | :--- |
@@ -298,7 +298,7 @@ let g:floaterm_repl_block_mark.go = '// %%'
 
 ---
 
-# AsyncRun Integration
+## 6. AsyncRun Integration
 
 Works with [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) to run commands in floating terminals. Three runners are registered automatically:
 
@@ -334,7 +334,7 @@ Examples:
 
 ---
 
-# Terminal List
+## 7. Terminal List
 
 The `:FloatermFzfList` command uses FZF to list all floaterm terminal windows for quick switching. Each entry shows the terminal's program type, buffer number, title, command, window type, and position.
 
@@ -344,7 +344,7 @@ The `:FloatermFzfList` command uses FZF to list all floaterm terminal windows fo
 
 ---
 
-# Core Variables
+## 8. Core Variables
 
 | Variable | Type | Description |
 |----------|------|-------------|
@@ -358,7 +358,7 @@ The `:FloatermFzfList` command uses FZF to list all floaterm terminal windows fo
 
 ---
 
-# Similar Plugins
+## 9. Similar Plugins
 
 If you're on Neovim and want deeper AI integration:
 
