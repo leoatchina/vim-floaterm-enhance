@@ -22,7 +22,7 @@
 - 对应语言的 REPL 程序：Python 的 `ipython`/`python`，R 的 `radian`/`R`，Node.js 的 `node` 等
 
 **AsyncRun 功能**
-- [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)
+- 需要安装 [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)
 
 ---
 
@@ -319,36 +319,90 @@ let g:floaterm_repl_block_mark.go = '// %%'
 
 ## 6. AsyncRun 集成
 
-跟 [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) 配合，在浮动终端里跑命令。插件自动注册了三个 runner：
+跟 [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) 配合，在浮动终端里跑命令。插件自动注册了以下 runner：
 
-- **`floaterm_right`** — 右侧垂直分割
-- **`floaterm_float`** — 浮动窗口
-- **`floaterm_bottom`** — 底部水平分割
+| Runner | 窗口类型 | 位置 |
+|--------|---------|------|
+| **`floaterm_right`** | vsplit | right |
+| **`floaterm_left`** | vsplit | left |
+| **`floaterm_bottom`** | split | botright |
+| **`floaterm_top`** | split | top |
+| **`floaterm_topleft`** | vsplit | topleft |
+| **`floaterm_float`** | float | center |
+| **`floaterm_center`** | float | center |
+
+### 6.1. 终端复用
+
+执行命令时，插件会先在已有的 floaterm 列表中查找**相同 wintype + position** 的终端。找到就复用，找不到才创建新的。这样多次运行命令不会不断开新终端。
+
+### 6.2. 默认尺寸
+
+创建新终端时，如果 AsyncRun 没有传入 `width` / `height`，插件会使用以下默认值：
+
+| 窗口类型 | 默认 width | 默认 height |
+|---------|-----------|------------|
+| **float** | 0.7 | 0.3 |
+| **vsplit** | 0.45 | — |
+| **split** | — | 0.3 |
+
+如果 AsyncRun 传入了 `width` 或 `height`（通过 `-width=` / `-height=`），则使用传入的值。
+
+### 6.3. 参数说明
+
+通过 AsyncRun 的 `-xxx=` 语法传递参数：
+
+- **`-focus=0`** — 命令发送后自动回到编辑器（默认 `focus=1`，留在终端）
+- **`-silent=1`** — 创建/打开终端后立即隐藏
+- **`-width=0.5`** — 指定终端宽度（覆盖默认值）
+- **`-height=0.4`** — 指定终端高度（覆盖默认值）
+
+### 6.4. 流程图
 
 ```mermaid
 graph TB
-    AsyncRun[AsyncRun 命令] --> SelectType{选择位置}
-    SelectType -->|floaterm_right| Right[垂直分割 + 右侧]
-    SelectType -->|floaterm_float| Float[浮动窗口]
-    SelectType -->|floaterm_bottom| Bottom[水平分割 + 底部]
-    Right --> FindExist{已有终端?}
-    Float --> FindExist
+    AsyncRun[AsyncRun 命令] --> SelectType{选择 runner}
+    SelectType -->|floaterm_right| Right[vsplit + right]
+    SelectType -->|floaterm_left| Left[vsplit + left]
+    SelectType -->|floaterm_bottom| Bottom[split + botright]
+    SelectType -->|floaterm_top| Top[split + top]
+    SelectType -->|floaterm_topleft| TopLeft[vsplit + topleft]
+    SelectType -->|floaterm_float / floaterm_center| Float[float + center]
+    Right --> FindExist{已有同类型终端?}
+    Left --> FindExist
     Bottom --> FindExist
-    FindExist -->|是| OpenExist[打开已有终端]
+    Top --> FindExist
+    TopLeft --> FindExist
+    Float --> FindExist
+    FindExist -->|是| OpenExist[复用已有终端]
     FindExist -->|否| CreateNew[创建新终端]
-    OpenExist --> SendCmd[发送 cd + 命令]
-    CreateNew --> SendCmd
+    OpenExist --> Silent{silent?}
+    CreateNew --> Silent
+    Silent -->|是| Hide[隐藏终端]
+    Silent -->|否| Visible[保持可见]
+    Hide --> SendCmd[发送 cd + 命令]
+    Visible --> SendCmd
     SendCmd --> FocusCheck{focus 参数}
     FocusCheck -->|focus=0| BackEditor[回到编辑器]
     FocusCheck -->|focus=1| InTerm[留在终端]
 ```
 
-用法示例：
+### 6.5. 用法示例
 
 ```vim
+" 在浮动窗口中运行
 :AsyncRun -mode=term -pos=floaterm_float echo "Hello, World!"
+
+" 在右侧分割中运行 Python
 :AsyncRun -mode=term -pos=floaterm_right python %
-:AsyncRun -mode=term -pos=floaterm_bottom node %
+
+" 在底部分割中运行，运行后回到编辑器
+:AsyncRun -mode=term -pos=floaterm_bottom -focus=0 node %
+
+" 在左侧分割中运行，指定宽度
+:AsyncRun -mode=term -pos=floaterm_left -width=0.3 make
+
+" 在顶部分割中运行
+:AsyncRun -mode=term -pos=floaterm_top -height=0.2 git status
 ```
 
 ---

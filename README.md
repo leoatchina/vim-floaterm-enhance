@@ -22,7 +22,7 @@ Leverages floaterm's floating terminal capabilities to seamlessly integrate mult
 - Language-specific REPL programs: `ipython`/`python` for Python, `radian`/`R` for R, `node` for Node.js, etc.
 
 **For AsyncRun features**
-- [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)
+- needs[asyncrun.vim](https://github.com/skywind3000/asyncrun.vim)
 
 ---
 
@@ -319,36 +319,90 @@ let g:floaterm_repl_block_mark.go = '// %%'
 
 ## 6. AsyncRun Integration
 
-Works with [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) to run commands in floating terminals. Three runners are registered automatically:
+Works with [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) to run commands in floating terminals. The following runners are registered automatically:
 
-- **`floaterm_right`** — vertical split on the right
-- **`floaterm_float`** — floating window
-- **`floaterm_bottom`** — horizontal split at the bottom
+| Runner | Window Type | Position |
+|--------|-------------|----------|
+| **`floaterm_right`** | vsplit | right |
+| **`floaterm_left`** | vsplit | left |
+| **`floaterm_bottom`** | split | botright |
+| **`floaterm_top`** | split | top |
+| **`floaterm_topleft`** | vsplit | topleft |
+| **`floaterm_float`** | float | center |
+| **`floaterm_center`** | float | center |
+
+### 6.1. Terminal Reuse
+
+When running a command, the plugin first searches existing floaterm buffers for one with **matching wintype + position**. If found, it reuses that terminal; otherwise it creates a new one. This prevents spawning new terminals on every run.
+
+### 6.2. Default Sizes
+
+When creating a new terminal, if AsyncRun doesn't pass `width` / `height`, the plugin uses these defaults:
+
+| Window Type | Default width | Default height |
+|-------------|---------------|----------------|
+| **float** | 0.7 | 0.3 |
+| **vsplit** | 0.45 | — |
+| **split** | — | 0.3 |
+
+If AsyncRun passes `width` or `height` (via `-width=` / `-height=`), those values are used instead.
+
+### 6.3. Parameters
+
+Pass parameters using AsyncRun's `-xxx=` syntax:
+
+- **`-focus=0`** — return to editor after sending the command (default `focus=1`, stay in terminal)
+- **`-silent=1`** — hide the terminal immediately after creating/opening it
+- **`-width=0.5`** — set terminal width (overrides default)
+- **`-height=0.4`** — set terminal height (overrides default)
+
+### 6.4. Flow
 
 ```mermaid
 graph TB
-    AsyncRun[AsyncRun Command] --> SelectType{Select Position}
-    SelectType -->|floaterm_right| Right[Vertical Split + Right]
-    SelectType -->|floaterm_float| Float[Floating Window]
-    SelectType -->|floaterm_bottom| Bottom[Horizontal Split + Bottom]
-    Right --> FindExist{Existing Terminal?}
-    Float --> FindExist
+    AsyncRun[AsyncRun Command] --> SelectType{Select Runner}
+    SelectType -->|floaterm_right| Right[vsplit + right]
+    SelectType -->|floaterm_left| Left[vsplit + left]
+    SelectType -->|floaterm_bottom| Bottom[split + botright]
+    SelectType -->|floaterm_top| Top[split + top]
+    SelectType -->|floaterm_topleft| TopLeft[vsplit + topleft]
+    SelectType -->|floaterm_float / floaterm_center| Float[float + center]
+    Right --> FindExist{Existing terminal with same type?}
+    Left --> FindExist
     Bottom --> FindExist
-    FindExist -->|Yes| OpenExist[Open Existing]
+    Top --> FindExist
+    TopLeft --> FindExist
+    Float --> FindExist
+    FindExist -->|Yes| OpenExist[Reuse Existing]
     FindExist -->|No| CreateNew[Create New]
-    OpenExist --> SendCmd[Send cd + Command]
-    CreateNew --> SendCmd
+    OpenExist --> Silent{silent?}
+    CreateNew --> Silent
+    Silent -->|Yes| Hide[Hide Terminal]
+    Silent -->|No| Visible[Keep Visible]
+    Hide --> SendCmd[Send cd + Command]
+    Visible --> SendCmd
     SendCmd --> FocusCheck{focus Parameter}
     FocusCheck -->|focus=0| BackEditor[Return to Editor]
     FocusCheck -->|focus=1| InTerm[Stay in Terminal]
 ```
 
-Examples:
+### 6.5. Examples
 
 ```vim
+" Run in floating window
 :AsyncRun -mode=term -pos=floaterm_float echo "Hello, World!"
+
+" Run Python in right split
 :AsyncRun -mode=term -pos=floaterm_right python %
-:AsyncRun -mode=term -pos=floaterm_bottom node %
+
+" Run in bottom split, return to editor after
+:AsyncRun -mode=term -pos=floaterm_bottom -focus=0 node %
+
+" Run in left split with custom width
+:AsyncRun -mode=term -pos=floaterm_left -width=0.3 make
+
+" Run in top split
+:AsyncRun -mode=term -pos=floaterm_top -height=0.2 git status
 ```
 
 ---
