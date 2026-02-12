@@ -86,6 +86,14 @@ call floaterm#repl#update_program('julia', ['julia'], '--wintype=vsplit')
 
 在 Vim 里写代码的时候，可以直接把文件、代码片段、目录路径丢给 claude、opencode 这些 AI CLI 工具，不用切窗口。
 
+## AI 缓冲区管理
+
+所有 AI 终端的 bufnr 存在 `g:floaterm_ai_lst`（List）里，**最近使用的排在最前面**（MRU 顺序）。发送内容时，插件总是取 `lst[0]` 作为目标终端。
+
+- **启动时**：新建 AI 终端后，bufnr 被 `insert` 到列表头部
+- **切换时**：每次 `FloatermOpen` 事件触发，如果打开的终端 `program == 'AI'`，自动把它提到列表头部
+- **清理**：每次获取 bufnr 时，自动过滤掉已经不存在的终端（对比 `floaterm#buflist#gather()`）
+
 ## 启动流程
 
 ```mermaid
@@ -96,28 +104,52 @@ graph TB
     Select -->|自动| RunFirst[运行首个程序]
     Select -->|交互| FZF[显示 FZF 菜单]
     FZF --> Run[运行选中程序]
-    Run --> SetBuf[设置 g:floaterm_ai_lst]
+    RunFirst --> NewTerm[创建终端 → 得到 bufnr]
+    Run --> NewTerm
+    NewTerm --> PushFront["bufnr 插入 g:floaterm_ai_lst 头部"]
+    PushFront --> Return[回到编辑器]
+
+    style PushFront fill:#e1f5fe
 ```
 
 ## 发送上下文流程
 
 ```mermaid
 graph TB
-    Send[FloatermAiSend] --> GetBuf{获取 AI 缓冲区}
-    GetBuf -->|无| Err2[显示错误]
-    GetBuf -->|找到| Format[格式化路径]
+    Send[FloatermAiSend] --> GetBuf["获取 AI 缓冲区<br/>过滤已关闭的 bufnr<br/>取 g:floaterm_ai_lst 第0个"]
+    GetBuf -->|列表为空| Err2[显示错误]
+    GetBuf -->|找到 bufnr| Format[格式化路径]
     Format --> Type{类型}
-    Type -->|File| SendFile[发送文件路径]
-    Type -->|Line| SendRange[发送行范围]
-    Type -->|Dir| SendDir[发送目录路径]
-    Type -->|Selection| SendSel[发送选区]
+    Type -->|File| SendFile["发送 @filepath"]
+    Type -->|Line| SendRange["发送 @filepath#Lx-Ly"]
+    Type -->|Dir| SendDir["发送 @dirpath"]
     SendFile --> Term[发送到终端]
     SendRange --> Term
     SendDir --> Term
-    SendSel --> Term
     Term --> Stay{Bang?}
     Stay -->|是| StayEd[留在编辑器]
     Stay -->|否| JumpTerm[跳转到终端]
+
+    style GetBuf fill:#e1f5fe
+```
+
+## AI 行范围示例
+
+`FloatermAiSendLine` 会把文件路径和行范围格式化成 `@filepath#Lstart-Lend`，这是 Claude 等 AI CLI 工具能识别的文件引用格式：
+
+```vim
+" 假设当前编辑 /home/user/project/main.py
+
+" normal 模式，光标在第 5 行:
+:FloatermAiSendLine       " → 发送: @/home/user/project/main.py#L5
+
+" visual 模式，选中第 10-20 行:
+:'<,'>FloatermAiSendLine  " → 发送: @/home/user/project/main.py#L10-L20
+
+" 带 ! 留在编辑器:
+:'<,'>FloatermAiSendLine! " → 发送: @/home/user/project/main.py#L10-L20（光标留在编辑器）
+
+" 单行时只有 #Lx，多行时是 #Lx-Ly
 ```
 
 ## AI 命令
@@ -141,40 +173,105 @@ graph TB
 
 把编辑器里的代码直接发到 ipython、R、node 这些 REPL 里执行，支持逐行、代码块、整个文件等多种方式。
 
+## REPL 缓冲区管理
+
+REPL 终端的 bufnr 存在 `g:floaterm_repl_dict`（Dict）里，key 格式为 `{filetype}-{source_bufnr}`。这意味着**每个源文件可以有自己独立的 REPL**。
+
+- **key 生成**：由 `create_idx()` 生成，返回 `&ft . '-' . winbufnr(winnr())`，例如 `python-3`、`r-7`
+- **启动时**：新建 REPL 终端后，把 `{idx} → repl_bufnr` 存入字典
+- **发送时**：根据当前文件的 idx 查找对应的 REPL bufnr，并验证该终端是否仍然存在
+- **清理**：如果查找到的 bufnr 已不在 `floaterm#buflist#gather()` 中，自动从字典中移除
+
 ## 启动流程
 
 ```mermaid
 graph TB
-    Start[FloatermReplStart] --> Check{配置了程序?}
+    Start[FloatermReplStart] --> GenIdx["create_idx() → 生成 key<br/>如 python-3"]
+    GenIdx --> Lookup{在 g:floaterm_repl_dict 中查找}
+    Lookup -->|已存在| Validate{终端还在?}
+    Validate -->|是| OpenExist[打开已有终端]
+    Validate -->|否| Remove[从字典移除] --> NewREPL
+    Lookup -->|不存在| Check{配置了程序?}
     Check -->|否| Error[显示错误]
     Check -->|是| SelectMode{自动还是手选?}
     SelectMode -->|自动| GetFirst[取第一个程序]
     SelectMode -->|交互| ShowMenu[显示 FZF 菜单]
-    GetFirst --> CheckRunning{已经跑着了?}
-    ShowMenu --> UserSelect[用户选择]
-    UserSelect --> CheckRunning
-    CheckRunning -->|是| OpenExist[打开已有终端]
-    CheckRunning -->|否| CreateNew[创建新终端]
-    CreateNew --> SetName[设置终端名称]
-    SetName --> StoreMap[存到 g:floaterm_repl_dict]
-    OpenExist --> Return[回到编辑器]
-    StoreMap --> Return
+    GetFirst --> NewREPL[创建新终端]
+    ShowMenu --> UserSelect[用户选择] --> NewREPL
+    NewREPL --> StoreMap["g:floaterm_repl_dict[idx] = bufnr"]
+    StoreMap --> Return[回到编辑器]
+    OpenExist --> Return
+
+    style GenIdx fill:#e1f5fe
+    style StoreMap fill:#e1f5fe
 ```
 
 ## 代码发送流程
 
 ```mermaid
 graph TB
-    Send[FloatermReplSend] --> GetRange[获取代码范围]
-    GetRange --> GetFT[获取文件类型]
-    GetFT --> FindTerm{找 REPL 终端}
-    FindTerm -->|没找到| Prompt[提示启动 REPL]
-    FindTerm -->|找到| GetLines[获取代码行]
+    Send[FloatermReplSend] --> GenIdx["create_idx() → 生成 key"]
+    GenIdx --> FindTerm{"g:floaterm_repl_dict[idx] 存在?"}
+    FindTerm -->|不存在| Prompt[提示启动 REPL]
+    FindTerm -->|存在| ValidBuf{终端还在?}
+    ValidBuf -->|否| CleanUp[移除无效条目] --> Prompt
+    ValidBuf -->|是| GetRange[获取代码范围]
+    GetRange --> GetLines[获取代码行]
     GetLines --> Filter[过滤注释和空行]
     Filter --> SendData[发送到终端]
     SendData --> KeepCheck{keep 参数}
     KeepCheck -->|keep=0| MoveNext[移到下一行]
     KeepCheck -->|keep=1| Stay[留在原位]
+
+    style GenIdx fill:#e1f5fe
+```
+
+## 代码块（Block）模式
+
+`FloatermReplSendBlock` 用专门的注释标记把文件分成多个代码块，类似 Jupyter Notebook 的 Cell。光标所在的块会被发送到 REPL。
+
+### 块分隔符
+
+通过 `g:floaterm_repl_block_mark` 配置，内置了常见语言的标记：
+
+| 语言 | 分隔符模式 |
+|------|----------|
+| Python / R | `# %%`、`# In[\d*]`、`# STEP\d+` |
+| JavaScript | `// %%`、`// In[\d*]`、`// STEP\d+` |
+| Vim | `" %%` |
+| 其他语言 | `# %%`（默认） |
+
+### 块定位原理
+
+光标所在位置向上搜索最近的分隔符作为块开始，向下搜索最近的分隔符作为块结束。分隔符行本身不包含在发送内容中。如果向上找不到分隔符，则从文件开头开始；向下找不到则到文件末尾。
+
+### 示例
+
+```python
+# %% 数据加载
+import pandas as pd
+df = pd.read_csv('data.csv')
+
+# %% 数据处理
+df = df.dropna()
+df['new_col'] = df['col_a'] * 2
+
+# %% 可视化
+import matplotlib.pyplot as plt
+plt.plot(df['new_col'])
+plt.show()
+```
+
+光标在“数据处理”块内时，执行 `:FloatermReplSendBlock` 会发送中间那两行代码到 REPL。
+
+你也可以自定义分隔符：
+
+```vim
+" 覆盖 Python 的块标记
+let g:floaterm_repl_block_mark.python = ['# %%', '# BLOCK']
+
+" 给新语言加块标记
+let g:floaterm_repl_block_mark.go = '// %%'
 ```
 
 ## REPL 命令

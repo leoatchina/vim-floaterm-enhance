@@ -85,6 +85,14 @@ See [plugin/floaterm-repl.vim](plugin/floaterm-repl.vim) for the full list of bu
 
 Send files, code snippets, and directory paths to AI CLI tools without leaving Vim.
 
+## AI Buffer Management
+
+All AI terminal bufnrs are stored in `g:floaterm_ai_lst` (List), with the **most recently used at the front** (MRU order). When sending content, the plugin always picks `lst[0]` as the target terminal.
+
+- **On startup**: After creating a new AI terminal, its bufnr is `insert`ed at the head of the list
+- **On switch**: Every `FloatermOpen` event checks if the opened terminal has `program == 'AI'`, and automatically moves it to the front
+- **Cleanup**: Each time a bufnr is retrieved, stale entries (terminals no longer in `floaterm#buflist#gather()`) are filtered out
+
 ## Startup Flow
 
 ```mermaid
@@ -95,28 +103,52 @@ graph TB
     Select -->|Auto| RunFirst[Run First Program]
     Select -->|Interactive| FZF[Show FZF Menu]
     FZF --> Run[Run Selected]
-    Run --> SetBuf[Set g:floaterm_ai_lst]
+    RunFirst --> NewTerm[Create Terminal → get bufnr]
+    Run --> NewTerm
+    NewTerm --> PushFront["Insert bufnr at head of g:floaterm_ai_lst"]
+    PushFront --> Return[Return to Editor]
+
+    style PushFront fill:#e1f5fe
 ```
 
 ## Context Sending Flow
 
 ```mermaid
 graph TB
-    Send[FloatermAiSend] --> GetBuf{Get AI Buffer}
-    GetBuf -->|None| Err2[Show Error]
-    GetBuf -->|Found| Format[Format Path]
+    Send[FloatermAiSend] --> GetBuf["Get AI Buffer<br/>Filter closed bufnrs<br/>Pick g:floaterm_ai_lst index 0"]
+    GetBuf -->|List empty| Err2[Show Error]
+    GetBuf -->|Found bufnr| Format[Format Path]
     Format --> Type{Type}
-    Type -->|File| SendFile[Send File Path]
-    Type -->|Line| SendRange[Send Line Range]
-    Type -->|Dir| SendDir[Send Dir Path]
-    Type -->|Selection| SendSel[Send Selection]
+    Type -->|File| SendFile["Send @filepath"]
+    Type -->|Line| SendRange["Send @filepath#Lx-Ly"]
+    Type -->|Dir| SendDir["Send @dirpath"]
     SendFile --> Term[Send to Terminal]
     SendRange --> Term
     SendDir --> Term
-    SendSel --> Term
     Term --> Stay{Bang?}
     Stay -->|Yes| StayEd[Stay in Editor]
     Stay -->|No| JumpTerm[Jump to Terminal]
+
+    style GetBuf fill:#e1f5fe
+```
+
+## Line Range Example
+
+`FloatermAiSendLine` formats the file path and line range as `@filepath#Lstart-Lend`, which is the file reference format recognized by Claude and other AI CLI tools:
+
+```vim
+" Suppose you are editing /home/user/project/main.py
+
+" Normal mode, cursor on line 5:
+:FloatermAiSendLine       " → sends: @/home/user/project/main.py#L5
+
+" Visual mode, lines 10-20 selected:
+:'<,'>FloatermAiSendLine  " → sends: @/home/user/project/main.py#L10-L20
+
+" With bang, stay in editor:
+:'<,'>FloatermAiSendLine! " → sends: @/home/user/project/main.py#L10-L20 (cursor stays in editor)
+
+" Single line produces #Lx, multiple lines produce #Lx-Ly
 ```
 
 ## AI Commands
@@ -140,40 +172,105 @@ graph TB
 
 Send code from your editor to ipython, R, node, or any REPL running in a floating terminal. Supports line-by-line, code blocks, entire files, and more.
 
+## REPL Buffer Management
+
+REPL terminal bufnrs are stored in `g:floaterm_repl_dict` (Dict), with keys in the format `{filetype}-{source_bufnr}`. This means **each source file can have its own independent REPL**.
+
+- **Key generation**: `create_idx()` returns `&ft . '-' . winbufnr(winnr())`, e.g. `python-3`, `r-7`
+- **On startup**: After creating a new REPL terminal, stores `{idx} → repl_bufnr` in the dict
+- **On send**: Looks up the REPL bufnr by the current file's idx, and validates the terminal still exists
+- **Cleanup**: If the looked-up bufnr is no longer in `floaterm#buflist#gather()`, it is automatically removed from the dict
+
 ## Startup Flow
 
 ```mermaid
 graph TB
-    Start[FloatermReplStart] --> Check{Programs Configured?}
+    Start[FloatermReplStart] --> GenIdx["create_idx() → generate key<br/>e.g. python-3"]
+    GenIdx --> Lookup{Lookup in g:floaterm_repl_dict}
+    Lookup -->|Exists| Validate{Terminal still alive?}
+    Validate -->|Yes| OpenExist[Open Existing Terminal]
+    Validate -->|No| Remove[Remove from dict] --> NewREPL
+    Lookup -->|Not found| Check{Programs Configured?}
     Check -->|No| Error[Show Error]
     Check -->|Yes| SelectMode{Auto or Interactive?}
     SelectMode -->|Auto| GetFirst[Get First Program]
     SelectMode -->|Interactive| ShowMenu[Show FZF Menu]
-    GetFirst --> CheckRunning{Already Running?}
-    ShowMenu --> UserSelect[User Selects]
-    UserSelect --> CheckRunning
-    CheckRunning -->|Yes| OpenExist[Open Existing Terminal]
-    CheckRunning -->|No| CreateNew[Create New Terminal]
-    CreateNew --> SetName[Set Terminal Name]
-    SetName --> StoreMap[Store in g:floaterm_repl_dict]
-    OpenExist --> Return[Return to Editor]
-    StoreMap --> Return
+    GetFirst --> NewREPL[Create New Terminal]
+    ShowMenu --> UserSelect[User Selects] --> NewREPL
+    NewREPL --> StoreMap["g:floaterm_repl_dict[idx] = bufnr"]
+    StoreMap --> Return[Return to Editor]
+    OpenExist --> Return
+
+    style GenIdx fill:#e1f5fe
+    style StoreMap fill:#e1f5fe
 ```
 
 ## Code Sending Flow
 
 ```mermaid
 graph TB
-    Send[FloatermReplSend] --> GetRange[Get Code Range]
-    GetRange --> GetFT[Get Filetype]
-    GetFT --> FindTerm{Find REPL Terminal}
-    FindTerm -->|Not Found| Prompt[Prompt to Start REPL]
-    FindTerm -->|Found| GetLines[Get Code Lines]
+    Send[FloatermReplSend] --> GenIdx["create_idx() → generate key"]
+    GenIdx --> FindTerm{"g:floaterm_repl_dict[idx] exists?"}
+    FindTerm -->|Not found| Prompt[Prompt to Start REPL]
+    FindTerm -->|Exists| ValidBuf{Terminal still alive?}
+    ValidBuf -->|No| CleanUp[Remove stale entry] --> Prompt
+    ValidBuf -->|Yes| GetRange[Get Code Range]
+    GetRange --> GetLines[Get Code Lines]
     GetLines --> Filter[Filter Comments/Empty Lines]
     Filter --> SendData[Send to Terminal]
     SendData --> KeepCheck{keep Parameter}
     KeepCheck -->|keep=0| MoveNext[Move to Next Line]
     KeepCheck -->|keep=1| Stay[Stay at Position]
+
+    style GenIdx fill:#e1f5fe
+```
+
+## Code Block Mode
+
+`FloatermReplSendBlock` splits a file into code blocks using special comment markers, similar to Jupyter Notebook cells. The block under the cursor is sent to the REPL.
+
+### Block Delimiters
+
+Configured via `g:floaterm_repl_block_mark`. Built-in patterns for common languages:
+
+| Language | Delimiter Patterns |
+|----------|-------------------|
+| Python / R | `# %%`, `# In[\d*]`, `# STEP\d+` |
+| JavaScript | `// %%`, `// In[\d*]`, `// STEP\d+` |
+| Vim | `" %%` |
+| Other languages | `# %%` (default) |
+
+### How Block Detection Works
+
+From the cursor position, the plugin searches **backward** for the nearest delimiter (block start) and **forward** for the nearest delimiter (block end). The delimiter lines themselves are excluded from the sent content. If no delimiter is found above, the block starts from the beginning of the file; if none below, it extends to the end.
+
+### Example
+
+```python
+# %% Data loading
+import pandas as pd
+df = pd.read_csv('data.csv')
+
+# %% Data processing
+df = df.dropna()
+df['new_col'] = df['col_a'] * 2
+
+# %% Visualization
+import matplotlib.pyplot as plt
+plt.plot(df['new_col'])
+plt.show()
+```
+
+With the cursor inside the "Data processing" block, running `:FloatermReplSendBlock` sends those two lines of code to the REPL.
+
+You can also customize delimiters:
+
+```vim
+" Override Python block markers
+let g:floaterm_repl_block_mark.python = ['# %%', '# BLOCK']
+
+" Add block markers for a new language
+let g:floaterm_repl_block_mark.go = '// %%'
 ```
 
 ## REPL Commands
