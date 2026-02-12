@@ -48,21 +48,38 @@ Plug 'leoatchina/vim-floaterm-enhance'
 
 ## 3. 配置
 
-### 3.1. AI 配置
+### 3.1. 窗口参数（AI / REPL 通用）
+
+AI 和 REPL 的配置里都可以写 floaterm 的窗口参数（window opts），插件会解析后交给 floaterm 去创建/打开终端。
+
+**不写参数时**，插件根据当前窗口宽高比自动决定布局（`floaterm#enhance#parse_opt()`）：
+
+- 如果 `&columns > &lines * g:floaterm_prog_col_row_ratio`（默认 2.5），则 **右侧垂直分割**（`vsplit --position=right`），宽度为 `g:floaterm_prog_split_ratio`（默认 0.38）
+- 否则 **底部水平分割**（`split --position=bottom`），高度为 `g:floaterm_prog_split_ratio`（默认 0.38）
+
+**写了参数时**，用参数覆盖默认行为。常用参数：
+
+- **`--wintype`**：`float` / `vsplit` / `split`（Vim 不支持 `float`）
+- **`--position`**：`left` / `right` / `top` / `bottom` / `topright` / ...
+- **`--width` / `--height`**：窗口尺寸比例（小数）或具体值
+- **`--title`**：终端标题
+
+### 3.2. AI 配置
 
 在 vimrc 里设置 `g:floaterm_ai_programs`：
 
 ```vim
 let g:floaterm_ai_programs = [
-    \ ["claude", "--wintype=vsplit --position=left --width=0.3"],
+    \ 'claude',
+    \ ["codex", "--wintype=vsplit --position=right --width=0.3"],
     \ ["opencode", "--wintype=float --position=topright --width=0.45 --height=0.8", "AI"],
+    \ ["zsh", "--wintype=split --position=bottom --width=0.45 --height=0.8", "SHELL"],
   \ ]
 " 格式: [命令, floaterm 窗口参数, 标识(可选)]
-" 窗口参数就是 floaterm 支持的那些: --wintype, --position, --width, --height 等
-" 第三个参数可以不写，默认是 "AI"
+" 第三个参数可以不写，默认是 "AI", 如果是其他值激活时不会加到g:floaterm_ai_lst
 ```
 
-### 3.2. REPL 配置
+### 3.3. REPL 配置
 
 REPL 的配置跟 AI 不一样。插件启动时已经内置了常见语言的 REPL 程序（Python 用 ipython，R 用 radian 等等），所以大部分情况下你不需要额外配置。
 
@@ -74,7 +91,8 @@ call floaterm#repl#update_program('python', ['ipython --no-autoindent', 'python3
 call floaterm#repl#update_program('r', ['radian', 'R'])
 call floaterm#repl#update_program('javascript', ['node'])
 
-" 也可以带 floaterm 窗口参数
+" 也可以带 floaterm 窗口参数（第三个参数，和 AI 配置里的窗口参数一样）
+" 支持: --wintype, --position, --width, --height, --title 等
 call floaterm#repl#update_program('julia', ['julia'], '--wintype=vsplit')
 ```
 

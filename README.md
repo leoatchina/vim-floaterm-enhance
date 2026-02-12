@@ -48,18 +48,36 @@ Plug 'leatchina/vim-floaterm-enhance'
 
 ## 3. Configuration
 
+### 3.0. Window Options (Shared by AI / REPL)
+
+Both AI and REPL configuration accept floaterm window options (window opts). The plugin parses them and passes them to floaterm when creating/opening terminals.
+
+**If omitted**, the plugin auto-determines layout based on the current window aspect ratio (`floaterm#enhance#parse_opt()`):
+
+- If `&columns > &lines * g:floaterm_prog_col_row_ratio` (default 2.5): **right vertical split** (`vsplit --position=right`), width = `g:floaterm_prog_split_ratio` (default 0.38)
+- Otherwise: **bottom horizontal split** (`split --position=bottom`), height = `g:floaterm_prog_split_ratio` (default 0.38)
+
+**If provided**, options override the default behavior. Common options:
+
+- **`--wintype`**: `float` / `vsplit` / `split` (Vim doesn't support `float`)
+- **`--position`**: `left` / `right` / `top` / `bottom` / `topright` / ...
+- **`--width` / `--height`**: ratio (float) or absolute value
+- **`--title`**: terminal title
+
 ### 3.1. AI
 
 Set `g:floaterm_ai_programs` in your vimrc:
 
 ```vim
 let g:floaterm_ai_programs = [
-    \ ["claude", "--wintype=vsplit --position=left --width=0.3"],
+    \ 'claude',
+    \ ["codex", "--wintype=vsplit --position=right --width=0.3"],
     \ ["opencode", "--wintype=float --position=topright --width=0.45 --height=0.8", "AI"],
+    \ ["zsh", "--wintype=split --position=bottom --width=0.45 --height=0.8", "SHELL"],
   \ ]
 " Format: [command, floaterm window opts, label (optional)]
-" Window opts are standard floaterm options: --wintype, --position, --width, --height, etc.
-" The third element defaults to "AI" if omitted.
+" Window opts are standard floaterm options: --wintype, --position, --width, --height, --title, etc.
+" The third element defaults to "AI" if omitted. Non-"AI" labels won't be added to g:floaterm_ai_lst
 ```
 
 ### 3.2. REPL
@@ -73,8 +91,9 @@ call floaterm#repl#update_program('python', ['ipython --no-autoindent', 'python3
 call floaterm#repl#update_program('r', ['radian', 'R'])
 call floaterm#repl#update_program('javascript', ['node'])
 
-" You can also pass floaterm window options
+" You can also pass floaterm window options (3rd argument, same as AI config window opts)
 call floaterm#repl#update_program('julia', ['julia'], '--wintype=vsplit')
+" Supports: --wintype, --position, --width, --height, --title, etc.
 ```
 
 See [plugin/floaterm-repl.vim](plugin/floaterm-repl.vim) for the full list of built-in defaults.
