@@ -9,6 +9,7 @@ Leverages floaterm's floating terminal capabilities to seamlessly integrate mult
 **demo**
 - Demonstrates AI-generated mnist code and REPL code execution, including the AI program selection process
 - Using **vim9.1** + **coc.nvim**
+
 [![vim-floaterm-enhance mnist demo](https://img.youtube.com/vi/s9vmbK3ZDC4/hqdefault.jpg)](https://youtu.be/s9vmbK3ZDC4)
 
 ---

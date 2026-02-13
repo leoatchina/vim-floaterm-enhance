@@ -9,6 +9,7 @@
 **demo**
 - 展示了 ai生成 mnist 代码和 repl 执行代码功能， 其中有选择 ai 程序的过程
 - 使用的是 **vim9.1** + **coc.nvim**
+
 [![vim-floaterm-enhance mnist demo](https://img.youtube.com/vi/s9vmbK3ZDC4/hqdefault.jpg)](https://youtu.be/s9vmbK3ZDC4)
 
 ---
