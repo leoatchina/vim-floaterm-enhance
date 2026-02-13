@@ -6,6 +6,11 @@ An enhancement plugin for [vim-floaterm](https://github.com/voldikss/vim-floater
 
 Leverages floaterm's floating terminal capabilities to seamlessly integrate multiple AI tools (Claude, OpenCode, etc.) and various REPLs (Python, R, Node.js, etc.), enabling code sending, command execution, and AI cli interaction without leaving your editor.
 
+**demo**
+- Demonstrates AI-generated mnist code and REPL code execution, including the AI program selection process
+- Using **vim9.1** + **coc.nvim**
+[![vim-floaterm-enhance mnist demo](https://img.youtube.com/vi/s9vmbK3ZDC4/hqdefault.jpg)](https://youtu.be/s9vmbK3ZDC4)
+
 ---
 
 ## 1. Requirements

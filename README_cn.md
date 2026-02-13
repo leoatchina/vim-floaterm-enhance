@@ -6,6 +6,11 @@
 
 充分利用 floaterm 的浮动终端特性，无缝集成多种 AI 工具（Claude、OpenCode 等）和各类 REPL（Python、R、Node.js 等），让你在编辑器内就能完成代码发送、命令执行和 AI 交互。
 
+**demo**
+- 展示了 ai生成 mnist 代码和 repl 执行代码功能， 其中有选择 ai 程序的过程
+- 使用的是 **vim9.1** + **coc.nvim**
+[![vim-floaterm-enhance mnist demo](https://img.youtube.com/vi/s9vmbK3ZDC4/hqdefault.jpg)](https://youtu.be/s9vmbK3ZDC4)
+
 ---
 
 ## 1. 依赖
