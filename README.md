@@ -54,7 +54,7 @@ Plug 'leatchina/vim-floaterm-enhance'
 
 ## 3. Configuration
 
-### 3.0. Window Options (Shared by AI / REPL)
+### 3.1. Window Options (Shared by AI / REPL)
 
 Both AI and REPL configuration accept floaterm window options (window opts). The plugin parses them and passes them to floaterm when creating/opening terminals.
 
@@ -70,7 +70,7 @@ Both AI and REPL configuration accept floaterm window options (window opts). The
 - **`--width` / `--height`**: ratio (float) or absolute value
 - **`--title`**: terminal title
 
-### 3.1. AI
+### 3.2. AI
 
 Set `g:floaterm_ai_programs` in your vimrc:
 
@@ -86,7 +86,7 @@ let g:floaterm_ai_programs = [
 " The third element defaults to "AI" if omitted. Non-"AI" labels won't be added to g:floaterm_ai_lst
 ```
 
-### 3.2. REPL
+### 3.3. REPL
 
 REPL configuration works differently from AI. The plugin ships with built-in REPL programs for common languages (ipython for Python, radian for R, etc.), so most users don't need extra config.
 
