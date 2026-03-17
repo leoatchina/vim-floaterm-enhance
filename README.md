@@ -339,7 +339,7 @@ Works with [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) to run co
 
 ### 6.1. Terminal Reuse
 
-When running a command, the plugin first searches existing floaterm buffers for one with **matching wintype + position**. If found, it reuses that terminal; otherwise it creates a new one. This prevents spawning new terminals on every run.
+When running a command, the plugin reuses the existing floaterm for the **same runner position** first (for example `floaterm_right` reuses the right-side floaterm, `floaterm_bottom` reuses the bottom one). If none exists, it creates a new terminal. This prevents spawning new terminals on every run in the same position.
 
 ### 6.2. Default Sizes
 
@@ -348,7 +348,7 @@ When creating a new terminal, if AsyncRun doesn't pass `width` / `height`, the p
 | Window Type | Default width | Default height |
 |-------------|---------------|----------------|
 | **float** | 0.7 | 0.3 |
-| **vsplit** | 0.45 | — |
+| **vsplit** | 0.3 | — |
 | **split** | — | 0.3 |
 
 If AsyncRun passes `width` or `height` (via `-width=` / `-height=`), those values are used instead.
@@ -373,7 +373,7 @@ graph TB
     SelectType -->|floaterm_top| Top[split + top]
     SelectType -->|floaterm_topleft| TopLeft[vsplit + topleft]
     SelectType -->|floaterm_float / floaterm_center| Float[float + center]
-    Right --> FindExist{Existing terminal with same type?}
+    Right --> FindExist{Existing terminal at same position?}
     Left --> FindExist
     Bottom --> FindExist
     Top --> FindExist

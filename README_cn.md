@@ -339,7 +339,7 @@ let g:floaterm_repl_block_mark.go = '// %%'
 
 ### 6.1. 终端复用
 
-执行命令时，插件会先在已有的 floaterm 列表中查找**相同 wintype + position** 的终端。找到就复用，找不到才创建新的。这样多次运行命令不会不断开新终端。
+执行命令时，插件会优先复用**同一个 runner 位置**对应的 floaterm。比如 `floaterm_right` 会复用右侧终端，`floaterm_bottom` 会复用底部终端；只有该位置还没有终端时才新建。这样同位置多次运行命令不会不断开新终端。
 
 ### 6.2. 默认尺寸
 
@@ -348,7 +348,7 @@ let g:floaterm_repl_block_mark.go = '// %%'
 | 窗口类型 | 默认 width | 默认 height |
 |---------|-----------|------------|
 | **float** | 0.7 | 0.3 |
-| **vsplit** | 0.45 | — |
+| **vsplit** | 0.3 | — |
 | **split** | — | 0.3 |
 
 如果 AsyncRun 传入了 `width` 或 `height`（通过 `-width=` / `-height=`），则使用传入的值。
@@ -373,7 +373,7 @@ graph TB
     SelectType -->|floaterm_top| Top[split + top]
     SelectType -->|floaterm_topleft| TopLeft[vsplit + topleft]
     SelectType -->|floaterm_float / floaterm_center| Float[float + center]
-    Right --> FindExist{已有同类型终端?}
+    Right --> FindExist{已有同位置终端?}
     Left --> FindExist
     Bottom --> FindExist
     Top --> FindExist
